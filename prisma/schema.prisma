@@ -39,6 +39,12 @@ enum ComplaintAction {
   RATED
 }
 
+enum NotificationType {
+  COMPLAINT_RECEIVED
+  COMPLAINT_UPDATED
+  ANNOUNCEMENT_PUBLISHED
+}
+
 model User {
   id            String         @id @default(cuid())
   username      String         @unique
@@ -58,6 +64,7 @@ model User {
   complaints    Complaint[]    @relation("ComplaintReporter")
   complaintLogs ComplaintLog[] @relation("ComplaintLogActor")
   announcements Announcement[] @relation("AnnouncementCreator")
+  notifications Notification[]
 
   @@index([role])
   @@index([lingkunganId])
@@ -96,12 +103,26 @@ model Complaint {
   reporter          User              @relation("ComplaintReporter", fields: [reporterUserId], references: [id], onDelete: Restrict)
   lingkungan        Lingkungan        @relation(fields: [lingkunganId], references: [id], onDelete: Restrict)
   logs              ComplaintLog[]
+  evidences         ComplaintEvidence[]
+  notifications     Notification[]
 
   @@index([reporterUserId])
   @@index([lingkunganId])
   @@index([handlingStatus])
   @@index([publicationStatus])
   @@index([createdAt])
+}
+
+model ComplaintEvidence {
+  id          String    @id @default(cuid())
+  complaintId String
+  path        String
+  mimeType    String
+  sizeBytes   Int
+  createdAt   DateTime  @default(now())
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@index([complaintId])
 }
 
 model ComplaintLog {
@@ -136,6 +157,24 @@ model Announcement {
 
   @@index([published])
   @@index([createdById])
+}
+
+model Notification {
+  id             String           @id @default(cuid())
+  recipientId    String
+  type           NotificationType
+  title          String
+  message        String
+  complaintId    String?
+  announcementId String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+  recipient      User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  complaint      Complaint?       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, readAt, createdAt])
+  @@index([complaintId])
+  @@index([announcementId])
 }
 
 model Account {

@@ -35,7 +35,8 @@ Complaint
   │
   ├── belongs to User (reporter)
   ├── belongs to Lingkungan
-  └── has many ComplaintLogs
+  ├── has many ComplaintLogs
+  └── has many ComplaintEvidence
 
 Announcement
   │
@@ -165,6 +166,39 @@ PUBLISHED
 UNPUBLISHED
 RATED
 ```
+
+## 6.1 Complaint Evidence
+
+`ComplaintEvidence` menyimpan satu atau lebih bukti gambar untuk sebuah pengaduan:
+
+```text
+id
+complaint_id
+path
+mime_type
+size_bytes
+created_at
+```
+
+`Complaint.evidence_path` lama tetap dipertahankan sebagai kompatibilitas dan menunjuk ke file pertama bila tersedia.
+
+## 6.2 Notification
+
+Notifikasi in-app ditujukan ke user tertentu dan dapat merujuk ke pengaduan atau pengumuman:
+
+```text
+id
+recipient_id
+type
+title
+message
+complaint_id nullable
+announcement_id nullable
+read_at nullable
+created_at
+```
+
+Notifikasi dibuat ketika pengaduan masuk, status/respon pengaduan berubah, atau pengumuman diterbitkan. Daftar dan status baca selalu dibatasi oleh `recipient_id` dari session server-side.
 
 ## 7. Announcement
 

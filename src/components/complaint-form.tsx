@@ -15,15 +15,21 @@ export function ComplaintForm({ environments }: { environments: Environment[] })
         event.preventDefault();
         setPending(true);
         setMessage("");
+        const form = event.currentTarget;
 
-        const response = await fetch("/api/warga/pengaduan", {
-            method: "POST",
-            body: new FormData(event.currentTarget),
-        });
-        const result = (await response.json()) as { message?: string; complaint?: { ticketNumber: string } };
-        setMessage(result.complaint ? `${result.message} Nomor tiket: ${result.complaint.ticketNumber}` : result.message ?? "Pengaduan tidak dapat dikirim.");
-        if (response.ok) event.currentTarget.reset();
-        setPending(false);
+        try {
+            const response = await fetch("/api/warga/pengaduan", {
+                method: "POST",
+                body: new FormData(form),
+            });
+            const result = (await response.json()) as { message?: string; complaint?: { ticketNumber: string } };
+            setMessage(result.complaint ? `${result.message} Nomor tiket: ${result.complaint.ticketNumber}` : result.message ?? "Pengaduan tidak dapat dikirim.");
+            if (response.ok) form.reset();
+        } catch {
+            setMessage("Pengaduan tidak dapat dikirim. Periksa koneksi lalu coba lagi.");
+        } finally {
+            setPending(false);
+        }
     }
 
     return (
@@ -41,15 +47,24 @@ export function ComplaintForm({ environments }: { environments: Environment[] })
             </div>
             <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="category">Kategori</label>
-                <input id="category" name="category" required maxLength={60} placeholder="Contoh: Infrastruktur" className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3" />
+                <select id="category" name="category" required className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3">
+                    <option value="">Pilih kategori</option>
+                    <option value="Infrastruktur">Infrastruktur</option>
+                    <option value="Kebersihan">Kebersihan</option>
+                    <option value="Keamanan">Keamanan</option>
+                    <option value="Pelayanan publik">Pelayanan publik</option>
+                    <option value="Lingkungan">Lingkungan</option>
+                    <option value="Sosial">Sosial</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
             </div>
             <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="description">Deskripsi</label>
-                <textarea id="description" name="description" required minLength={20} maxLength={5000} rows={6} className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3" />
+                <textarea id="description" name="description" required maxLength={5000} rows={6} className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3" />
             </div>
             <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="evidence">Foto bukti (opsional, maksimal 5 MB)</label>
-                <input id="evidence" name="evidence" type="file" accept="image/jpeg,image/png,image/webp" className="mt-1 block w-full text-sm" />
+                <input id="evidence" name="evidence" type="file" multiple accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full cursor-pointer rounded-md border border-[var(--line)] bg-white text-sm file:mr-3 file:border-0 file:bg-[var(--ink)] file:px-4 file:py-3 file:font-semibold file:text-white hover:file:bg-[var(--accent)]" />
             </div>
             {message && <p className="text-sm text-[var(--muted)]" role="status">{message}</p>}
             <button type="submit" disabled={pending} className="rounded-md bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">

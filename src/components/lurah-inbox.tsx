@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PublicationControl } from "@/components/publication-control";
+import { TextPromptDialog } from "@/components/text-prompt-dialog";
 
 type Complaint = {
     id: string;
@@ -22,6 +23,7 @@ export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint
     const [complaints, setComplaints] = useState(initialComplaints);
     const [message, setMessage] = useState("");
     const [pendingId, setPendingId] = useState("");
+    const [prompt, setPrompt] = useState<{ complaintId: string; action: "RESPOND" | "COMPLETE"; initialValue: string } | null>(null);
 
     async function act(complaintId: string, action: "START" | "RESPOND" | "COMPLETE" | "OUTSIDE_AUTHORITY", response?: string) {
         setPendingId(complaintId);
@@ -44,8 +46,7 @@ export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint
     }
 
     function askForResponse(complaint: Complaint, action: "RESPOND" | "COMPLETE") {
-        const response = window.prompt(action === "RESPOND" ? "Respon resmi Lurah" : "Respon resmi sebelum menyelesaikan pengaduan", complaint.officialResponse ?? "");
-        if (response?.trim()) void act(complaint.id, action, response.trim());
+        setPrompt({ complaintId: complaint.id, action, initialValue: complaint.officialResponse ?? "" });
     }
 
     return (
@@ -74,6 +75,7 @@ export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint
                     </div>
                 </article>
             ))}
+            {prompt && <TextPromptDialog title={prompt.action === "RESPOND" ? "Respon resmi Lurah" : "Respon sebelum menyelesaikan pengaduan"} initialValue={prompt.initialValue} onCancel={() => setPrompt(null)} onConfirm={(response) => { setPrompt(null); void act(prompt.complaintId, prompt.action, response); }} />}
         </section>
     );
 }

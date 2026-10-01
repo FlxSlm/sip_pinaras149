@@ -54,40 +54,40 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Data pengaduan tidak valid." }, { status: 400 });
     }
 
-    const evidence = formData.get("evidence");
-    let evidencePath: string | null = null;
-    let storedFilePath: string | null = null;
+    const evidenceEntries = formData.getAll("evidence");
+    const evidenceFiles: Array<{ path: string; mimeType: string; sizeBytes: number }> = [];
+    const storedFilePaths: string[] = [];
 
-    if (evidence !== null && (!isFile(evidence) || evidence.size === 0)) {
+    if (evidenceEntries.some((entry) => !isFile(entry) || entry.size === 0)) {
         return NextResponse.json({ message: "Bukti foto tidak valid." }, { status: 400 });
     }
-    if (isFile(evidence)) {
-        const extension = allowedEvidenceTypes.get(evidence.type);
-        if (!extension || evidence.size > MAX_EVIDENCE_BYTES) {
+    for (const entry of evidenceEntries) {
+        if (!isFile(entry)) continue;
+        const extension = allowedEvidenceTypes.get(entry.type);
+        if (!extension || entry.size > MAX_EVIDENCE_BYTES) {
             return NextResponse.json({ message: "Bukti harus berupa JPG, PNG, atau WEBP maksimal 5 MB." }, { status: 400 });
         }
 
-        const evidenceBytes = Buffer.from(await evidence.arrayBuffer());
-        if (!hasValidImageSignature(evidenceBytes, evidence.type)) {
+        const evidenceBytes = Buffer.from(await entry.arrayBuffer());
+        if (!hasValidImageSignature(evidenceBytes, entry.type)) {
             return NextResponse.json({ message: "Isi file bukti tidak sesuai dengan tipe gambarnya." }, { status: 400 });
         }
         const relativePath = path.join("storage", "evidence", `${randomUUID()}.${extension}`);
-        storedFilePath = path.join(process.cwd(), relativePath);
+        const storedFilePath = path.join(process.cwd(), relativePath);
         await mkdir(path.dirname(storedFilePath), { recursive: true });
         await writeFile(storedFilePath, evidenceBytes, { flag: "wx" });
-        evidencePath = relativePath.replaceAll(path.sep, "/");
+        storedFilePaths.push(storedFilePath);
+        evidenceFiles.push({ path: relativePath.replaceAll(path.sep, "/"), mimeType: entry.type, sizeBytes: entry.size });
     }
 
     try {
-        const complaint = await createComplaint(prisma, parsed.data, session.user.id, evidencePath);
+        const complaint = await createComplaint(prisma, parsed.data, session.user.id, evidenceFiles);
         return NextResponse.json({
             message: "Pengaduan berhasil dikirim.",
             complaint,
         }, { status: 201 });
     } catch (error) {
-        if (storedFilePath) {
-            await unlink(storedFilePath).catch(() => undefined);
-        }
+        await Promise.all(storedFilePaths.map((filePath) => unlink(filePath).catch(() => undefined)));
         if (error instanceof Error && error.message === "LINGKUNGAN_INVALID") {
             return NextResponse.json({ message: "Lingkungan tidak tersedia." }, { status: 400 });
         }

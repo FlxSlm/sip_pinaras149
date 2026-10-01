@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { getProviders, getSession, signIn } from "next-auth/react";
 import { useEffect } from "react";
 import { getRoleHome } from "@/lib/authorization";
+import Image from "next/image";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -59,8 +60,9 @@ export default function LoginPage() {
                         type="button"
                         disabled={!providers?.google}
                         onClick={() => signIn("google", { callbackUrl: getCallbackUrl() })}
-                        className="rounded-full bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex items-center gap-3 rounded-full bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                     >
+                        <Image src="/images/google-logo.jpg" alt="" width={20} height={20} className="h-5 w-5 rounded-full bg-white object-contain" />
                         {providers === null ? "Memuat..." : providers.google ? "Lanjut dengan Google" : "Google belum dikonfigurasi"}
                     </button>
                 </div>

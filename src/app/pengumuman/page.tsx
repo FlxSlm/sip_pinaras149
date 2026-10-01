@@ -1,0 +1,7 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+
+export default async function AnnouncementsPage() {
+    const announcements = await prisma.announcement.findMany({ where: { published: true }, orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }] });
+    return <main className="min-h-screen px-6 py-12"><div className="mx-auto max-w-5xl"><p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--accent)]">Informasi kelurahan</p><h1 className="mt-3 text-4xl font-bold">Pengumuman</h1><div className="mt-8 grid gap-4 md:grid-cols-2">{announcements.map((item) => <Link href={`/pengumuman/${item.slug}`} key={item.id} className="rounded-xl border border-[var(--line)] bg-white p-6 shadow-sm hover:-translate-y-1"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent)]">{item.isPinned ? "Penting" : "Pengumuman"}</p><h2 className="mt-2 text-xl font-semibold">{item.title}</h2><p className="mt-2 text-sm text-[var(--muted)]">{item.createdAt.toLocaleDateString("id-ID")}</p></Link>)}{announcements.length === 0 && <p className="text-[var(--muted)]">Belum ada pengumuman.</p>}</div></div></main>;
+}

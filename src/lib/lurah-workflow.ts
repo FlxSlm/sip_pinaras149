@@ -16,7 +16,7 @@ export async function applyLurahAction(
     return prisma.$transaction(async (transaction) => {
         const complaint = await transaction.complaint.findUnique({
             where: { id: input.complaintId },
-            select: { id: true, handlingStatus: true },
+            select: { id: true, handlingStatus: true, reporterUserId: true, ticketNumber: true },
         });
         if (!complaint) throw new Error("COMPLAINT_NOT_FOUND");
 
@@ -31,6 +31,15 @@ export async function applyLurahAction(
             });
             await transaction.complaintLog.create({
                 data: { complaintId: complaint.id, actorUserId, action: "RESPONSE_ADDED", note: input.response },
+            });
+            await transaction.notification.create({
+                data: {
+                    recipientId: complaint.reporterUserId,
+                    type: "COMPLAINT_UPDATED",
+                    title: "Pengaduan Anda mendapat respon",
+                    message: `Pengaduan ${complaint.ticketNumber} telah mendapat respon dari Lurah.`,
+                    complaintId: complaint.id,
+                },
             });
             return { id: complaint.id, action: input.action };
         }
@@ -63,6 +72,15 @@ export async function applyLurahAction(
                 fromStatus: transition.from,
                 toStatus: transition.to,
                 note: input.response || null,
+            },
+        });
+        await transaction.notification.create({
+            data: {
+                recipientId: complaint.reporterUserId,
+                type: "COMPLAINT_UPDATED",
+                title: "Status pengaduan berubah",
+                message: `Pengaduan ${complaint.ticketNumber} sekarang ${transition.to.replaceAll("_", " ")}.`,
+                complaintId: complaint.id,
             },
         });
 

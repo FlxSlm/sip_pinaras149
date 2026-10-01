@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TextPromptDialog } from "@/components/text-prompt-dialog";
 
 type Complaint = {
     id: string;
@@ -18,6 +19,7 @@ export function NeighborhoodInbox({ initialComplaints }: { initialComplaints: Co
     const [complaints, setComplaints] = useState(initialComplaints);
     const [message, setMessage] = useState("");
     const [pendingId, setPendingId] = useState("");
+    const [prompt, setPrompt] = useState<{ complaintId: string } | null>(null);
 
     async function act(complaintId: string, action: "VERIFY" | "ADD_NOTE" | "FORWARD", note?: string) {
         setPendingId(complaintId);
@@ -59,10 +61,11 @@ export function NeighborhoodInbox({ initialComplaints }: { initialComplaints: Co
                     <div className="mt-5 flex flex-wrap gap-2">
                         {complaint.handlingStatus === "DIAJUKAN" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "VERIFY")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Verifikasi</button>}
                         {complaint.handlingStatus === "DIVERIFIKASI" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "FORWARD")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Teruskan ke Lurah</button>}
-                        <button disabled={pendingId === complaint.id} onClick={() => { const note = window.prompt("Catatan internal"); if (note?.trim()) void act(complaint.id, "ADD_NOTE", note.trim()); }} className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">Tambah catatan</button>
+                        <button disabled={pendingId === complaint.id} onClick={() => setPrompt({ complaintId: complaint.id })} className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">Tambah catatan</button>
                     </div>
                 </article>
             ))}
+            {prompt && <TextPromptDialog title="Catatan internal" onCancel={() => setPrompt(null)} onConfirm={(note) => { setPrompt(null); void act(prompt.complaintId, "ADD_NOTE", note); }} />}
         </section>
     );
 }
