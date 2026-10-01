@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { getSession, signIn } from "next-auth/react";
+import { getProviders, getSession, signIn } from "next-auth/react";
+import { useEffect } from "react";
 import { getRoleHome } from "@/lib/authorization";
 
 export default function LoginPage() {
@@ -9,6 +10,11 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState(false);
     const [pending, setPending] = useState(false);
+    const [providers, setProviders] = useState<Record<string, { name?: string }> | null>(null);
+
+    useEffect(() => {
+        void getProviders().then((availableProviders) => setProviders(availableProviders as Record<string, { name?: string }> | null));
+    }, []);
 
     function getCallbackUrl() {
         const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
@@ -38,12 +44,12 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[var(--surface)] px-6 py-16">
-            <div className="mx-auto max-w-md rounded-lg border border-[var(--line)] bg-white p-8 shadow-sm">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+        <main className="min-h-screen bg-[var(--surface)] px-5 py-10 sm:px-8 sm:py-16">
+            <div className="mx-auto max-w-md rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(20,40,55,0.1)] sm:p-9">
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
                     SIP Pinaras
                 </p>
-                <h1 className="mt-4 text-3xl font-semibold text-[var(--ink)]">Masuk</h1>
+                <h1 className="mt-4 text-4xl font-bold text-[var(--ink)]">Masuk ke layanan</h1>
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
                     Warga masuk dengan akun Google atau Facebook. Petugas menggunakan username dan password yang diberikan kelurahan.
                 </p>
@@ -51,17 +57,19 @@ export default function LoginPage() {
                 <div className="mt-8 grid gap-3 sm:grid-cols-2">
                     <button
                         type="button"
+                        disabled={!providers?.google}
                         onClick={() => signIn("google", { callbackUrl: getCallbackUrl() })}
-                        className="rounded-md bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white"
+                        className="rounded-full bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                        Google
+                        {providers === null ? "Memuat..." : providers.google ? "Lanjut dengan Google" : "Google belum dikonfigurasi"}
                     </button>
                     <button
                         type="button"
+                        disabled={!providers?.facebook}
                         onClick={() => signIn("facebook", { callbackUrl: getCallbackUrl() })}
-                        className="rounded-md border border-[var(--line)] px-4 py-3 text-sm font-semibold text-[var(--ink)]"
+                        className="rounded-full border border-[var(--line)] px-4 py-3 text-sm font-bold text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                        Facebook
+                        {providers === null ? "Memuat..." : providers.facebook ? "Lanjut dengan Facebook" : "Facebook belum dikonfigurasi"}
                     </button>
                 </div>
 
@@ -78,7 +86,7 @@ export default function LoginPage() {
                             value={username}
                             onChange={(event) => setUsername(event.target.value)}
                             autoComplete="username"
-                            className="mt-2 w-full rounded-md border border-[var(--line)] px-3 py-3"
+                            className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-3 outline-none focus:border-[var(--accent)]"
                             required
                         />
                     </label>
@@ -89,7 +97,7 @@ export default function LoginPage() {
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                             autoComplete="current-password"
-                            className="mt-2 w-full rounded-md border border-[var(--line)] px-3 py-3"
+                            className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-3 outline-none focus:border-[var(--accent)]"
                             required
                         />
                     </label>
@@ -97,7 +105,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={pending}
-                        className="w-full rounded-md bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                        className="w-full rounded-full bg-[var(--accent)] px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
                     >
                         {pending ? "Memeriksa..." : "Masuk sebagai petugas"}
                     </button>

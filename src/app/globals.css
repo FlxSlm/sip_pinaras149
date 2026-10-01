@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --surface: #f3f6f4;
-  --ink: #17352f;
-  --muted: #5e716b;
-  --line: #d7e1dc;
-  --accent: #087f5b;
-  --soft-accent: #dff2e9;
+  --surface: #f4f6f3;
+  --ink: #122b3a;
+  --muted: #66757d;
+  --line: #d9e1df;
+  --accent: #c52f35;
+  --soft-accent: #f8e5e2;
+  --gold: #b37713;
+  --gold-soft: #fff4d6;
 }
 
 @theme inline {
@@ -16,10 +18,27 @@
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-soft-accent: var(--soft-accent);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
 }
 
 body {
   background: var(--surface);
   color: var(--ink);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.7), transparent 45%), linear-gradient(0deg, rgba(18, 43, 58, 0.025) 1px, transparent 1px);
+  background-size: auto, 100% 28px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+
+button:not(:disabled):active,
+a:active {
+  transform: translateY(1px);
 }

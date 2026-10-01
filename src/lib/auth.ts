@@ -7,6 +7,15 @@ import FacebookProvider from "next-auth/providers/facebook";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 
+const oauthProviders = [
+    process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+        ? GoogleProvider({ clientId: process.env.AUTH_GOOGLE_ID, clientSecret: process.env.AUTH_GOOGLE_SECRET })
+        : null,
+    process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET
+        ? FacebookProvider({ clientId: process.env.AUTH_FACEBOOK_ID, clientSecret: process.env.AUTH_FACEBOOK_SECRET })
+        : null,
+].filter((provider): provider is NonNullable<typeof provider> => provider !== null);
+
 const baseAdapter = PrismaAdapter(
     prisma as unknown as Parameters<typeof PrismaAdapter>[0],
 );
@@ -79,14 +88,7 @@ export const authOptions: NextAuthOptions = {
         error: "/login",
     },
     providers: [
-        GoogleProvider({
-            clientId: process.env.AUTH_GOOGLE_ID ?? "",
-            clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
-        }),
-        FacebookProvider({
-            clientId: process.env.AUTH_FACEBOOK_ID ?? "",
-            clientSecret: process.env.AUTH_FACEBOOK_SECRET ?? "",
-        }),
+        ...oauthProviders,
         CredentialsProvider({
             name: "Staff",
             credentials: {

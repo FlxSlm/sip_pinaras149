@@ -4,6 +4,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { authOptions } from "@/lib/auth";
 import { UsernameForm } from "@/components/username-form";
 import { ComplaintForm } from "@/components/complaint-form";
+import { RatingControl } from "@/components/rating-control";
 import { prisma } from "@/lib/prisma";
 
 export default async function WargaPage() {
@@ -25,7 +26,7 @@ export default async function WargaPage() {
     const complaints = await prisma.complaint.findMany({
         where: { reporterUserId: session.user.id },
         orderBy: { createdAt: "desc" },
-        select: { ticketNumber: true, title: true, handlingStatus: true, createdAt: true },
+        select: { id: true, ticketNumber: true, title: true, handlingStatus: true, rating: true, createdAt: true },
     });
 
     return (
@@ -56,10 +57,12 @@ export default async function WargaPage() {
                     ) : (
                         <div className="mt-4 space-y-3">
                             {complaints.map((complaint) => (
-                                <div key={complaint.ticketNumber} className="border-b border-[var(--line)] pb-3 last:border-0 last:pb-0">
+                                <div key={complaint.ticketNumber} className="border-b border-[var(--line)] pb-4 last:border-0 last:pb-0">
                                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">{complaint.ticketNumber}</p>
                                     <p className="mt-1 font-medium text-[var(--ink)]">{complaint.title}</p>
-                                    <p className="mt-1 text-sm text-[var(--muted)]">{complaint.handlingStatus} · {complaint.createdAt.toLocaleDateString("id-ID")}</p>
+                                    <p className="mt-1 text-sm text-[var(--muted)]">{complaint.handlingStatus.replaceAll("_", " ")} · {complaint.createdAt.toLocaleDateString("id-ID")}</p>
+                                    {complaint.handlingStatus === "SELESAI" && complaint.rating === null && <RatingControl complaintId={complaint.id} />}
+                                    {complaint.rating !== null && <p className="mt-3 text-sm font-semibold text-[var(--gold)]">Rating Anda: {complaint.rating}/5</p>}
                                 </div>
                             ))}
                         </div>

@@ -22,13 +22,13 @@ async function main() {
         update: {
             name: "Lurah Pinaras",
             role: UserRole.lurah,
-            passwordHash: hashPassword("ganti-password-lurah"),
+            passwordHash: hashPassword("lurah123"),
         },
         create: {
             username: "lurah.pinaras",
             name: "Lurah Pinaras",
             role: UserRole.lurah,
-            passwordHash: hashPassword("ganti-password-lurah"),
+            passwordHash: hashPassword("lurah123"),
         },
     });
 
@@ -49,14 +49,14 @@ async function main() {
                 name: `Kepala Lingkungan ${String(index).padStart(2, "0")}`,
                 role: UserRole.kepala_lingkungan,
                 lingkunganId: lingkungan.id,
-                passwordHash: hashPassword("ganti-password-kepala"),
+                passwordHash: hashPassword("kepala123"),
             },
             create: {
                 username: `kepala.${code.toLowerCase()}`,
                 name: `Kepala Lingkungan ${String(index).padStart(2, "0")}`,
                 role: UserRole.kepala_lingkungan,
                 lingkunganId: lingkungan.id,
-                passwordHash: hashPassword("ganti-password-kepala"),
+                passwordHash: hashPassword("kepala123"),
             },
         });
     }

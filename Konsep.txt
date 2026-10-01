@@ -2,3 +2,4 @@ BELUM :
 
 Di luar kewenangan nanti diganti dengan Diarahkan ke pusat atau kata lain yang lebih bagus. 
 
+Jangan masukkan file `.env.local` ke GitHub, bagaimana cara agar berikut ketika saya menjalankan perintah git add . dan git commict hingga push file tersebut tidak masuk ke dalam repo github saya ?
