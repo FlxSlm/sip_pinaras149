@@ -18,7 +18,7 @@ SIP (Sistem Informasi Peduli Pinaras) adalah aplikasi web modern untuk Kelurahan
 5. Transparansi publik melalui publikasi pengaduan yang telah diproses/disanitasi.
 6. Rating kepuasan 1–5 bintang untuk pengaduan yang telah selesai.
 7. Progressive Web App (PWA).
-8. Autentikasi warga melalui Google/Facebook.
+8. Autentikasi warga melalui Google.
 9. Autentikasi petugas melalui credentials aplikasi.
 
 Sistem **tidak** mengimplementasikan level Camat atau tingkat pemerintahan di atas Lurah. Jika suatu pengaduan berada di luar kewenangan kelurahan, Lurah dapat memberi status `DI_LUAR_KEWENANGAN`; tindak lanjut setelah itu berada di luar scope SIP.
@@ -113,7 +113,7 @@ Tidak dapat melihat:
 
 ### 4.2 Warga
 
-Login melalui Google atau Facebook.
+Login melalui Google.
 
 Dapat:
 
@@ -196,7 +196,6 @@ Contoh konseptual:
 Provider:
 
 - Google
-- Facebook
 
 Saat login pertama:
 
@@ -211,7 +210,7 @@ Saat login pertama:
 
 ### 6.2 Identity rule
 
-`username` SIP **bukan** pengganti `google/fb provider account ID`.
+`username` SIP **bukan** pengganti provider account ID Google.
 
 Provider identity harus tetap berada pada layer autentikasi yang didukung Auth.js.
 
@@ -770,7 +769,7 @@ Bootstrap Next.js + TypeScript + Tailwind + environment + PostgreSQL + Prisma.
 Database schema + seed + base layout + public pages skeleton.
 
 ### Day 3
-Auth.js + Google/Facebook warga + credentials petugas + roles + authorization.
+Auth.js + Google warga + credentials petugas + roles + authorization.
 
 ### Day 4
 Announcement module.

@@ -42,7 +42,7 @@ export default async function WargaPage() {
                 </div>
                 <section className="mt-10 max-w-xl rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
                     <h2 className="text-xl font-semibold text-[var(--ink)]">Profil SIP</h2>
-                    <p className="mt-2 text-sm text-[var(--muted)]">Username ini terpisah dari identitas Google atau Facebook Anda.</p>
+                    <p className="mt-2 text-sm text-[var(--muted)]">Username ini terpisah dari identitas Google Anda.</p>
                     <UsernameForm initialUsername={user.username} />
                 </section>
                 <section className="mt-6 max-w-xl rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">

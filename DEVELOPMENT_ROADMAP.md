@@ -60,7 +60,6 @@ Tasks:
 
 - Auth.js;
 - Google;
-- Facebook;
 - credentials for petugas;
 - role-aware session;
 - protected route boundaries;

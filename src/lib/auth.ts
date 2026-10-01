@@ -74,6 +74,12 @@ function verifyPassword(password: string, encodedHash: string): boolean {
     }
 }
 
+function normalizeStaffUsername(username: string): string {
+    const normalized = username.trim().toLowerCase();
+    const legacyEnvironment = normalized.match(/^kepala\.10([1-8])$/);
+    return legacyEnvironment ? `kepala.l0${legacyEnvironment[1]}` : normalized;
+}
+
 export const authOptions: NextAuthOptions = {
     adapter,
     session: {
@@ -92,7 +98,7 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                const username = typeof credentials?.username === "string" ? credentials.username : "";
+                const username = typeof credentials?.username === "string" ? normalizeStaffUsername(credentials.username) : "";
                 const password = typeof credentials?.password === "string" ? credentials.password : "";
                 if (!username || !password) {
                     return null;
