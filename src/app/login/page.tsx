@@ -51,10 +51,10 @@ export default function LoginPage() {
                 </p>
                 <h1 className="mt-4 text-4xl font-bold text-[var(--ink)]">Masuk ke layanan</h1>
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Warga masuk dengan akun Google atau Facebook. Petugas menggunakan username dan password yang diberikan kelurahan.
+                    Warga masuk dengan akun Google. Petugas menggunakan username dan password yang diberikan kelurahan.
                 </p>
 
-                <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <div className="mt-8">
                     <button
                         type="button"
                         disabled={!providers?.google}
@@ -62,14 +62,6 @@ export default function LoginPage() {
                         className="rounded-full bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {providers === null ? "Memuat..." : providers.google ? "Lanjut dengan Google" : "Google belum dikonfigurasi"}
-                    </button>
-                    <button
-                        type="button"
-                        disabled={!providers?.facebook}
-                        onClick={() => signIn("facebook", { callbackUrl: getCallbackUrl() })}
-                        className="rounded-full border border-[var(--line)] px-4 py-3 text-sm font-bold text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                        {providers === null ? "Memuat..." : providers.facebook ? "Lanjut dengan Facebook" : "Facebook belum dikonfigurasi"}
                     </button>
                 </div>
 

@@ -73,7 +73,6 @@ Verify migration and seed from a clean development database.
 Implement Auth.js using:
 
 - Google;
-- Facebook;
 - credentials for staff.
 
 Roles:

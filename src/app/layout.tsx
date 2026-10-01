@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SIP Pinaras",
   description: "Sistem Informasi Peduli Pinaras",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon-192.svg", apple: "/icon-192.svg" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id" className="h-full antialiased">
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full"><ServiceWorkerRegister />{children}</body>
     </html>
   );
 }
