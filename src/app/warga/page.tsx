@@ -1,9 +1,8 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { UsernameForm } from "@/components/username-form";
 import { ComplaintForm } from "@/components/complaint-form";
-import { RatingControl } from "@/components/rating-control";
+import { StatusBadge } from "@/components/status-badge";
 import { prisma } from "@/lib/prisma";
 import { getComplaintStats } from "@/lib/dashboard";
 import Link from "next/link";
@@ -14,56 +13,80 @@ export default async function WargaPage() {
     if (!session) redirect("/login");
     if (session.user.role !== "warga") redirect("/petugas");
 
-    const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { username: true },
-    });
-    if (!user) redirect("/login");
-
     const environments = await prisma.lingkungan.findMany({
         where: { active: true },
         select: { id: true, name: true },
         orderBy: { code: "asc" },
     });
-    const [complaints, stats] = await Promise.all([prisma.complaint.findMany({
-        where: { reporterUserId: session.user.id },
-        orderBy: { createdAt: "desc" },
-        select: { id: true, ticketNumber: true, title: true, handlingStatus: true, rating: true, createdAt: true },
-    }), getComplaintStats(prisma, { reporterUserId: session.user.id })]);
+
+    const [complaints, stats] = await Promise.all([
+        prisma.complaint.findMany({
+            where: { reporterUserId: session.user.id },
+            orderBy: { createdAt: "desc" },
+            select: { id: true, ticketNumber: true, title: true, category: true, handlingStatus: true, createdAt: true },
+        }),
+        getComplaintStats(prisma, { reporterUserId: session.user.id }),
+    ]);
+
+    const statCards = [
+        { label: "Total laporan", value: stats.total },
+        { label: "Selesai", value: stats.selesai },
+        { label: "Diproses", value: stats.dalamProses },
+        { label: "Ditolak", value: stats.ditolak },
+    ];
 
     return (
-        <DashboardShell role="warga" userName={session.user.name ?? session.user.email ?? user.username}>
-            <div className="mx-auto max-w-4xl">
-                <section className="mt-8 grid gap-3 sm:grid-cols-4">
-                    {[["Total laporan", stats.total], ["Selesai", stats.selesai], ["Diproses", stats.dalamProses], ["Ditolak", stats.ditolak]].map(([label, value]) => <div key={label} className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm"><p className="text-sm text-[var(--muted)]">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></div>)}
+        <DashboardShell role="warga" userName={session.user.name ?? session.user.email ?? "Warga"}>
+            <div className="mx-auto max-w-5xl">
+                <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {statCards.map((item) => (
+                        <div key={item.label} className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
+                            <p className="text-sm text-[var(--muted)]">{item.label}</p>
+                            <p className="mt-2 text-3xl font-extrabold text-[var(--ink)]">{item.value}</p>
+                        </div>
+                    ))}
                 </section>
-                <section id="profil-saya" className="mt-10 max-w-xl rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
-                    <h2 className="text-xl font-semibold text-[var(--ink)]">Profil SIP</h2>
-                    <p className="mt-2 text-sm text-[var(--muted)]">Username ini terpisah dari identitas Google Anda.</p>
-                    <UsernameForm initialUsername={user.username} />
-                </section>
-                <section id="buat-pengaduan" className="mt-6 max-w-xl rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
-                    <h2 className="text-xl font-semibold text-[var(--ink)]">Buat pengaduan</h2>
-                    <p className="mt-2 text-sm text-[var(--muted)]">Pengaduan Anda akan diteruskan kepada petugas sesuai lingkungan yang dipilih.</p>
+
+                <section id="buat" className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
+                    <h2 className="text-xl font-extrabold text-[var(--ink)]">Buat pengaduan</h2>
+                    <p className="mt-1 text-sm text-[var(--muted)]">Pengaduan Anda akan diteruskan kepada Admin Kelurahan untuk ditindaklanjuti.</p>
                     <ComplaintForm environments={environments} />
                 </section>
-                <section id="pengaduan-saya" className="mt-6 max-w-xl rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
-                    <h2 className="text-xl font-semibold text-[var(--ink)]">Pengaduan saya</h2>
+
+                <section id="riwayat" className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
+                    <h2 className="text-xl font-extrabold text-[var(--ink)]">Riwayat pengaduan</h2>
                     {complaints.length === 0 ? (
-                        <p className="mt-3 text-sm text-[var(--muted)]">Belum ada pengaduan.</p>
+                        <p className="mt-4 rounded-xl bg-[var(--surface)] p-6 text-sm text-[var(--muted)]">Belum ada pengaduan.</p>
                     ) : (
-                        <div className="mt-4 space-y-3">
+                        <div className="mt-4 divide-y divide-[var(--line)]">
                             {complaints.map((complaint) => (
-                                <Link href={`/pengaduan/${complaint.ticketNumber}`} key={complaint.ticketNumber} className="block border-b border-[var(--line)] pb-4 last:border-0 last:pb-0 hover:bg-[var(--surface)]">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">{complaint.ticketNumber}</p>
-                                    <p className="mt-1 font-medium text-[var(--ink)]">{complaint.title}</p>
-                                    <p className="mt-1 text-sm text-[var(--muted)]">{complaint.handlingStatus.replaceAll("_", " ")} · {complaint.createdAt.toLocaleDateString("id-ID")}</p>
-                                    {complaint.handlingStatus === "SELESAI" && complaint.rating === null && <RatingControl complaintId={complaint.id} />}
-                                    {complaint.rating !== null && <p className="mt-3 text-sm font-semibold text-[var(--gold)]">Rating Anda: {complaint.rating}/5</p>}
+                                <Link href={`/pengaduan/${complaint.ticketNumber}`} key={complaint.id} className="flex items-center justify-between gap-4 py-4 hover:bg-[var(--surface)]">
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand)]">{complaint.ticketNumber}</p>
+                                        <p className="mt-1 truncate font-semibold text-[var(--ink)]">{complaint.title}</p>
+                                        <p className="mt-1 text-sm text-[var(--muted)]">{complaint.category} · {complaint.createdAt.toLocaleDateString("id-ID")}</p>
+                                    </div>
+                                    <div className="shrink-0">
+                                        <StatusBadge status={complaint.handlingStatus} />
+                                    </div>
                                 </Link>
                             ))}
                         </div>
                     )}
+                </section>
+
+                <section id="profil" className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
+                    <h2 className="text-xl font-extrabold text-[var(--ink)]">Profil</h2>
+                    <div className="mt-4 flex items-center gap-4">
+                        <div className="grid size-14 place-items-center rounded-full bg-gradient-to-br from-[var(--leaf)] to-[var(--brand)] text-lg font-bold text-white">
+                            {(session.user.name ?? session.user.email ?? "W").slice(0, 1).toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="font-bold text-[var(--ink)]">{session.user.name ?? "Warga Pinaras"}</p>
+                            <p className="text-sm text-[var(--muted)]">{session.user.email}</p>
+                            <p className="mt-1 text-xs text-[var(--muted)]">Identitas Anda terhubung dengan akun Google.</p>
+                        </div>
+                    </div>
                 </section>
             </div>
         </DashboardShell>

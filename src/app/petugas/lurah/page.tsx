@@ -32,12 +32,30 @@ export default async function LurahPage() {
         },
     }), getComplaintStats(prisma, {})]);
 
+    const statCards = [
+        { label: "Total laporan", value: stats.total },
+        { label: "Selesai", value: stats.selesai },
+        { label: "Diproses", value: stats.dalamProses },
+        { label: "Ditolak", value: stats.ditolak },
+    ];
+
     return (
-        <DashboardShell role="lurah" userName={session.user.name ?? session.user.email ?? "Lurah"}>
-            <div className="mx-auto max-w-4xl">
-                <section className="mt-8 grid gap-3 sm:grid-cols-4">{[["Total laporan", stats.total], ["Selesai", stats.selesai], ["Diproses", stats.dalamProses], ["Ditolak", stats.ditolak]].map(([label, value]) => <div key={label} className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm"><p className="text-sm text-[var(--muted)]">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></div>)}</section>
-                <AnnouncementForm />
-                <div id="pengaduan"><LurahInbox initialComplaints={complaints.map((complaint) => ({ ...complaint, createdAt: complaint.createdAt.toISOString() }))} /></div>
+        <DashboardShell role="lurah" userName={session.user.name ?? session.user.email ?? "Admin Kelurahan"}>
+            <div className="mx-auto max-w-5xl">
+                <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {statCards.map((item) => (
+                        <div key={item.label} className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
+                            <p className="text-sm text-[var(--muted)]">{item.label}</p>
+                            <p className="mt-2 text-3xl font-extrabold text-[var(--ink)]">{item.value}</p>
+                        </div>
+                    ))}
+                </section>
+                <div className="mt-8">
+                    <AnnouncementForm />
+                </div>
+                <div id="pengaduan" className="mt-8">
+                    <LurahInbox initialComplaints={complaints.map((complaint) => ({ ...complaint, createdAt: complaint.createdAt.toISOString() }))} />
+                </div>
             </div>
         </DashboardShell>
     );

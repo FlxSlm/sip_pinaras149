@@ -1,0 +1,475 @@
+{
+  "document": {
+    "name": "SIPP V2 — Master Data Kelurahan Pinaras",
+    "version": "1.0"
+  },
+  "source": {
+    "title": "Kecamatan Tomohon Selatan Dalam Angka 2021",
+    "publisher": "Badan Pusat Statistik Kota Tomohon",
+    "publication_number": "71730.2105",
+    "catalog": "1102001.7173010",
+    "data_reference": "Utamanya tahun 2020; beberapa tabel menggunakan 2018, 2019, atau 2020.",
+    "url": "https://tomohonkota.bps.go.id",
+    "uploaded_file": "kecamatan-tomohon-selatan-dalam-angka-2021(1).pdf"
+  },
+  "data": {
+    "identity_and_geography": {
+      "name": "Kelurahan Pinaras",
+      "subdistrict": "Kecamatan Tomohon Selatan",
+      "city": "Kota Tomohon",
+      "position": "Salah satu dari 12 kelurahan di Kecamatan Tomohon Selatan.",
+      "area_km2": 3.98,
+      "area_percentage_source": 9.44,
+      "population_density_per_km2": 588.19,
+      "elevation_masl": 661.0,
+      "distance_to_subdistrict_capital_km": 8.3,
+      "distance_to_capital_in_table_km": 19.0,
+      "geographic_difficulty_index_2019": null,
+      "geographic_difficulty_ratio_2019": null,
+      "source_note": "Pada tabel 1.1.5 nilai IKG dan Rasio IKG Pinaras ditampilkan sebagai '…' (tidak tersedia)."
+    },
+    "government": {
+      "sls_count_2020": 8
+    },
+    "population": {
+      "2018": 2360,
+      "2019": 1865,
+      "2020": 2341,
+      "male_2020": 1196,
+      "female_2020": 1145,
+      "sex_ratio_2020": 104.5,
+      "age_structure_note": "Komposisi umur yang tersedia dalam publikasi adalah tingkat Kecamatan Tomohon Selatan, bukan khusus Pinaras."
+    },
+    "employment": {
+      "farmer": 467,
+      "seller": 40,
+      "civil_servant": 145,
+      "others": 1142
+    },
+    "education": {
+      "PAUD": 1,
+      "TK": 2,
+      "SD_negeri": 1,
+      "SD_swasta": 1,
+      "MI_negeri": 0,
+      "MI_swasta": 0,
+      "SMP_negeri": 0,
+      "SMP_swasta": 1,
+      "MTs_negeri": 0,
+      "MTs_swasta": 0,
+      "SMA_negeri": 0,
+      "SMA_swasta": 0,
+      "MA_negeri": 0,
+      "MA_swasta": 0,
+      "SMK_negeri": 0,
+      "SMK_swasta": 0,
+      "perguruan_tinggi_negeri": 0,
+      "perguruan_tinggi_swasta": 0,
+      "access_nearest_facility": {
+        "SD": "— (tabel kemudahan ditujukan untuk kelurahan tanpa sarana pendidikan setempat)",
+        "MI": "Mudah",
+        "SMP": "— (tabel kemudahan ditujukan untuk kelurahan tanpa sarana pendidikan setempat)",
+        "MTs": "Mudah",
+        "SMA": "Mudah",
+        "MA": "Mudah",
+        "SMK": "Mudah",
+        "Akademi_Perguruan_Tinggi": "Mudah"
+      }
+    },
+    "health": {
+      "hospital": 0,
+      "maternity_hospital": 0,
+      "puskesmas": 1,
+      "posyandu": 1,
+      "clinic_health_center": 0,
+      "polindes": 0,
+      "doctors": 3,
+      "dentists": 0,
+      "midwives": 0,
+      "other_health_workers": 15,
+      "pharmacy": 0,
+      "drug_store": 0,
+      "puskesmas_inpatient": 0,
+      "puskesmas_without_inpatient": 1,
+      "malnutrition_2019": 0,
+      "malnutrition_2020": 0
+    },
+    "religion_and_worship": {
+      "population_religion_presence": {
+        "Islam": false,
+        "Protestant": true,
+        "Catholic": true,
+        "Hindu": false,
+        "Buddha": false,
+        "Konghucu": false
+      },
+      "worship_places": {
+        "mosque": 0,
+        "protestant_church": 5,
+        "catholic_church": 1,
+        "temple_hindu": 0,
+        "vihara": 0,
+        "other": 0
+      },
+      "note": "Tabel agama menyatakan keberadaan penduduk menurut agama (Ada/tidak ada), bukan jumlah penganut."
+    },
+    "disaster_and_mitigation": {
+      "events_2020": {
+        "earthquake": 0,
+        "tsunami": 0,
+        "volcanic_eruption": 0,
+        "landslide": 0,
+        "flood": 0,
+        "flash_flood": 0,
+        "drought": 0,
+        "forest_land_fire": 0,
+        "windstorm": 0,
+        "storm": 0,
+        "tidal_wave": 0
+      },
+      "victims_2020": {
+        "earthquake": 0,
+        "tsunami": 0,
+        "volcanic_eruption": 0,
+        "landslide": 0,
+        "flood": 0,
+        "flash_flood": 0,
+        "drought": 0,
+        "forest_land_fire": 0,
+        "windstorm": 0,
+        "storm": 0,
+        "tidal_wave": 0
+      },
+      "mitigation_2020": {
+        "natural_disaster_early_warning": false,
+        "tsunami_specific_early_warning": false,
+        "safety_equipment": false,
+        "evacuation_signs_and_routes": false,
+        "river_canal_drainage_normalization": true
+      },
+      "embung_2019": 0,
+      "embung_2020": 0,
+      "critical_note": "Nilai 'Tidak ada' pada data bencana 2020 adalah kondisi kejadian yang tercatat dalam publikasi untuk tahun tersebut; bukan jaminan bahwa Pinaras bebas risiko bencana di masa kini."
+    },
+    "agriculture": {
+      "dry_field_garden_shifting_cultivation_ha_2020": 346,
+      "non_agriculture_land_ha_2020": 0,
+      "commodity_note": "Tabel 5.2 hanya menyajikan luas panen/produksi/produktivitas pada tingkat Kecamatan Tomohon Selatan, bukan per kelurahan, sehingga tidak boleh diatribusikan langsung ke Pinaras."
+    },
+    "industry": {
+      "micro_industry": {
+        "leather": 0,
+        "wood": 1,
+        "metal": 0,
+        "plait": 0,
+        "earthenware": 0,
+        "fabric": 0,
+        "food": 8
+      },
+      "craft_services": {
+        "mechanic": 0,
+        "blacksmith": 0,
+        "carpenter": 69,
+        "radio_repair": 0,
+        "barber": 0
+      }
+    },
+    "energy": {
+      "households": 726,
+      "PLN": 726,
+      "gas_lamp": 0,
+      "other_gas": 0,
+      "district_wide_note": "Data sumber air minum, penerangan jalan utama, dan bahan bakar memasak dalam publikasi disajikan pada tingkat Kecamatan Tomohon Selatan, bukan per kelurahan."
+    },
+    "trade": {
+      "market": 0,
+      "minimarket": 0,
+      "shops_stalls": 30,
+      "shopping_group": 0
+    },
+    "tourism": {
+      "hotels": 0,
+      "lodging": 0,
+      "restaurants": 0,
+      "tourism_objects": {
+        "nature": 1,
+        "history": 0,
+        "religion": 0,
+        "other": 0
+      },
+      "critical_note": "Publikasi tidak mencantumkan nama objek wisata alam Pinaras."
+    },
+    "transportation_and_communication": {
+      "bridges": {
+        "permanent": 0,
+        "wood": 0,
+        "emergency": 0
+      },
+      "cellular": {
+        "BTS": 0,
+        "operators": 5,
+        "signal_condition": "Kuat"
+      },
+      "inter_village_transport": {
+        "mode": "Darat",
+        "public_transport": "Ada, dengan trayek tetap"
+      },
+      "road": {
+        "surface": "Aspal",
+        "motor_vehicle_access": "Sepanjang Tahun"
+      },
+      "post_and_expedition": {
+        "post_office": 0,
+        "private_expedition": 0
+      }
+    },
+    "finance": {
+      "government_commercial_bank": 0,
+      "private_commercial_bank": 0,
+      "rural_credit_bank": 0,
+      "cooperatives": {
+        "KUD": 0,
+        "Kopinkra": 0,
+        "Kospin": 0,
+        "other": 0
+      },
+      "district_price_note": "Harga kebutuhan dan tabel lain pada bagian harga adalah tingkat Kecamatan Tomohon Selatan, bukan khusus Pinaras."
+    }
+  },
+  "source_map": [
+    {
+      "topic": "Geografi — luas wilayah",
+      "reference": "Tabel 1.1.1, halaman cetak 6",
+      "values": "3,98 km²; persentase sumber 9,44%"
+    },
+    {
+      "topic": "Geografi — kepadatan",
+      "reference": "Tabel 1.1.2, halaman cetak 7",
+      "values": "588,19 jiwa/km²"
+    },
+    {
+      "topic": "Geografi — ketinggian",
+      "reference": "Tabel 1.1.3, halaman cetak 8",
+      "values": "661 m"
+    },
+    {
+      "topic": "Geografi — jarak",
+      "reference": "Tabel 1.1.4, halaman cetak 9",
+      "values": "8,3 km ke ibu kota kecamatan; 19,0 km pada kolom ibu kota kabupaten dalam tabel"
+    },
+    {
+      "topic": "Geografi — IKG",
+      "reference": "Tabel 1.1.5, halaman cetak 10",
+      "values": "Pinaras: … / …"
+    },
+    {
+      "topic": "Geografi — bencana",
+      "reference": "Tabel 1.1.6, halaman cetak 11–13",
+      "values": "Semua jenis bencana yang ditampilkan: Tidak ada"
+    },
+    {
+      "topic": "Geografi — korban bencana",
+      "reference": "Tabel 1.1.7, halaman cetak 14–16",
+      "values": "Semua jenis korban yang ditampilkan: Tidak ada"
+    },
+    {
+      "topic": "Geografi — mitigasi",
+      "reference": "Tabel 1.1.8, halaman cetak 17–18",
+      "values": "Tidak ada early warning, safety equipment, rambu/jalur evakuasi; ada normalisasi sungai/kanal/tanggul/parit/drainase"
+    },
+    {
+      "topic": "Geografi — embung",
+      "reference": "Tabel 1.1.9, halaman cetak 19",
+      "values": "0 pada 2019 dan 2020"
+    },
+    {
+      "topic": "Pemerintahan — SLS",
+      "reference": "Tabel 2.1.1, halaman cetak 23",
+      "values": "8 SLS"
+    },
+    {
+      "topic": "Penduduk",
+      "reference": "Tabel 3.1.1, halaman cetak 27",
+      "values": "2018: 2.360; 2019: 1.865; 2020: 2.341"
+    },
+    {
+      "topic": "Penduduk — jenis kelamin",
+      "reference": "Tabel 3.1.2, halaman cetak 28",
+      "values": "1.196 laki-laki; 1.145 perempuan; total 2.341; rasio jenis kelamin 104,5"
+    },
+    {
+      "topic": "Ketenagakerjaan",
+      "reference": "Tabel 3.2.1, halaman cetak 30",
+      "values": "Petani 467; pedagang 40; PNS 145; lainnya 1.142"
+    },
+    {
+      "topic": "Pendidikan — PAUD/TK",
+      "reference": "Tabel 4.1.1, halaman cetak 33",
+      "values": "PAUD 1; TK 2"
+    },
+    {
+      "topic": "Pendidikan — SD",
+      "reference": "Tabel 4.1.2, halaman cetak 34",
+      "values": "SD negeri 1; SD swasta 1"
+    },
+    {
+      "topic": "Pendidikan — MI",
+      "reference": "Tabel 4.1.3, halaman cetak 35",
+      "values": "MI negeri 0; swasta 0"
+    },
+    {
+      "topic": "Pendidikan — SMP",
+      "reference": "Tabel 4.1.4, halaman cetak 36",
+      "values": "SMP negeri 0; SMP swasta 1"
+    },
+    {
+      "topic": "Pendidikan — MTs",
+      "reference": "Tabel 4.1.5, halaman cetak 37",
+      "values": "MTs negeri 0; swasta 0"
+    },
+    {
+      "topic": "Pendidikan — SMA/MA",
+      "reference": "Tabel 4.1.6–4.1.7, halaman cetak 38–39",
+      "values": "SMA negeri/swasta 0; MA negeri/swasta 0"
+    },
+    {
+      "topic": "Pendidikan — SMK",
+      "reference": "Tabel 4.1.8, halaman cetak 40",
+      "values": "SMK negeri/swasta 0"
+    },
+    {
+      "topic": "Pendidikan — perguruan tinggi",
+      "reference": "Tabel 4.1.9, halaman cetak 41",
+      "values": "Akademi/perguruan tinggi negeri/swasta 0"
+    },
+    {
+      "topic": "Pendidikan — akses",
+      "reference": "Tabel 4.1.10, halaman cetak 42–43",
+      "values": "MI, MTs, SMA, MA, SMK, akademi/perguruan tinggi: Mudah; SD/SMP: tanda —"
+    },
+    {
+      "topic": "Kesehatan — fasilitas",
+      "reference": "Tabel 4.2.1, halaman cetak 44",
+      "values": "Puskesmas 1; Posyandu 1; jenis fasilitas lain 0"
+    },
+    {
+      "topic": "Kesehatan — tenaga",
+      "reference": "Tabel 4.2.2, halaman cetak 45",
+      "values": "Dokter 3; dokter gigi 0; bidan 0; lainnya 15"
+    },
+    {
+      "topic": "Kesehatan — posyandu/apotek",
+      "reference": "Tabel 4.2.3, halaman cetak 46",
+      "values": "Posyandu 1; apotek 0; toko obat 0"
+    },
+    {
+      "topic": "Kesehatan — rincian sarana",
+      "reference": "Tabel 4.2.4, halaman cetak 47–48",
+      "values": "Puskesmas tanpa rawat inap 1; rawat inap 0; rumah sakit/bersalin/klinik/apotek sesuai baris Pinaras: 0"
+    },
+    {
+      "topic": "Kesehatan — gizi buruk",
+      "reference": "Tabel 4.2.5, halaman cetak 49",
+      "values": "2019: 0; 2020: 0"
+    },
+    {
+      "topic": "Agama",
+      "reference": "Tabel 4.3.1, halaman cetak 50",
+      "values": "Ada Protestan dan Katolik; agama lain pada baris Pinaras ditampilkan '-'; tabel bersifat keberadaan, bukan jumlah"
+    },
+    {
+      "topic": "Tempat ibadah",
+      "reference": "Tabel 4.3.2, halaman cetak 51",
+      "values": "Gereja Protestan 5; Gereja Katolik 1; jenis lain 0"
+    },
+    {
+      "topic": "Pertanian",
+      "reference": "Tabel 5.1, halaman cetak 55",
+      "values": "346 ha tegal/kebun/ladang/huma; lahan nonpertanian 0"
+    },
+    {
+      "topic": "Industri mikro",
+      "reference": "Tabel 6.1.1, halaman cetak 58",
+      "values": "Industri kayu 1; industri makanan 8; jenis lain 0"
+    },
+    {
+      "topic": "Jasa/pertukangan",
+      "reference": "Tabel 6.1.2, halaman cetak 59",
+      "values": "Tukang kayu 69; jenis jasa lain pada baris Pinaras 0"
+    },
+    {
+      "topic": "Energi — rumah tangga/penerangan",
+      "reference": "Tabel 6.2.1, halaman cetak 60",
+      "values": "726 rumah tangga; seluruhnya PLN"
+    },
+    {
+      "topic": "Perdagangan",
+      "reference": "Tabel 7.1.1, halaman cetak 66",
+      "values": "Toko/warung 30; pasar 0; minimarket 0; kelompok pertokoan 0"
+    },
+    {
+      "topic": "Pariwisata — akomodasi",
+      "reference": "Tabel 8.1.1, halaman cetak 69",
+      "values": "Hotel 0; penginapan 0; restoran/rumah makan 0"
+    },
+    {
+      "topic": "Pariwisata — objek",
+      "reference": "Tabel 8.1.2, halaman cetak 70",
+      "values": "Objek wisata alam 1; sejarah 0; religi 0; lainnya 0"
+    },
+    {
+      "topic": "Transportasi — jembatan",
+      "reference": "Tabel 9.1.1, halaman cetak 74",
+      "values": "Semua tipe jembatan pada baris Pinaras: 0"
+    },
+    {
+      "topic": "Komunikasi",
+      "reference": "Tabel 9.1.2, halaman cetak 75",
+      "values": "BTS 0; operator 5; kondisi sinyal Kuat"
+    },
+    {
+      "topic": "Transportasi antar-kelurahan",
+      "reference": "Tabel 9.1.3, halaman cetak 76",
+      "values": "Darat; angkutan umum ada dengan trayek tetap"
+    },
+    {
+      "topic": "Jalan",
+      "reference": "Tabel 9.1.4, halaman cetak 77",
+      "values": "Aspal; dapat dilalui kendaraan bermotor roda 4 atau lebih sepanjang tahun"
+    },
+    {
+      "topic": "Pos/ekspedisi",
+      "reference": "Tabel 9.1.5, halaman cetak 78",
+      "values": "Kantor pos 0; perusahaan/agen ekspedisi swasta 0"
+    },
+    {
+      "topic": "Keuangan",
+      "reference": "Tabel 10.1.2, halaman cetak 82",
+      "values": "Bank umum pemerintah 0; bank umum swasta 0; BPR 0"
+    },
+    {
+      "topic": "Koperasi",
+      "reference": "Tabel 10.1.3, halaman cetak 83",
+      "values": "KUD 0; Kopinkra 0; Kospin 0; lainnya 0"
+    }
+  ],
+  "quality_notes": [
+    "Luas total Kecamatan Tomohon Selatan berbeda antara narasi (31,78 km²) dan total Tabel 1.1.1 (35,27 km²).",
+    "Persentase Pinaras 9,44% pada Tabel 1.1.1 tidak selaras dengan 3,98 km² / 35,27 km²; jangan gunakan untuk perhitungan baru tanpa verifikasi.",
+    "Data agama bersifat keberadaan, bukan jumlah penduduk.",
+    "Data kelompok umur tersedia hanya tingkat kecamatan.",
+    "Data komoditas panen/produksi pada Tabel 5.2 bersifat kecamatan, bukan Pinaras."
+  ],
+  "verification_queue": [
+    "Nama 8 lingkungan",
+    "Alamat dan kontak resmi",
+    "Nama Lurah/staf",
+    "Sejarah",
+    "Visi dan misi",
+    "Nama objek wisata alam",
+    "Nama fasilitas pendidikan/kesehatan",
+    "Koordinat dan batas administrasi",
+    "Foto resmi dan izin/kredit",
+    "Data terbaru pengganti baseline 2020"
+  ]
+}

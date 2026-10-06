@@ -63,7 +63,7 @@ export function NeighborhoodInbox({ initialComplaints }: { initialComplaints: Co
                     {complaint.evidences.length > 0 && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{complaint.evidences.map((evidence) => <div key={evidence.id} className="relative aspect-video overflow-hidden rounded-md"><Image src={`/api/pengaduan/${complaint.ticketNumber}/evidence/${evidence.id}`} alt="Bukti pengaduan" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" /></div>)}</div>}
                     <div className="mt-5 flex flex-wrap gap-2">
                         {complaint.handlingStatus === "DIAJUKAN" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "VERIFY")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Verifikasi</button>}
-                        {complaint.handlingStatus === "DIVERIFIKASI" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "FORWARD")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Teruskan ke Lurah</button>}
+                        {complaint.handlingStatus === "DIVERIFIKASI" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "FORWARD")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Teruskan ke Admin Kelurahan</button>}
                         <button disabled={pendingId === complaint.id} onClick={() => setPrompt({ complaintId: complaint.id })} className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">Tambah catatan</button>
                     </div>
                 </article>

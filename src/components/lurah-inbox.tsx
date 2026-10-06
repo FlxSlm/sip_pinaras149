@@ -54,7 +54,7 @@ export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint
     return (
         <section className="mt-8 space-y-4">
             {message && <p className="text-sm text-[var(--muted)]" role="status">{message}</p>}
-            {complaints.length === 0 && <p className="rounded-lg border border-[var(--line)] bg-white p-6 text-sm text-[var(--muted)]">Belum ada pengaduan yang diteruskan ke Lurah.</p>}
+            {complaints.length === 0 && <p className="rounded-lg border border-[var(--line)] bg-white p-6 text-sm text-[var(--muted)]">Belum ada pengaduan yang perlu ditindaklanjuti.</p>}
             {complaints.map((complaint) => (
                 <article key={complaint.id} className="rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -78,7 +78,7 @@ export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint
                     </div>
                 </article>
             ))}
-            {prompt && <TextPromptDialog title={prompt.action === "RESPOND" ? "Respon resmi Lurah" : "Respon sebelum menyelesaikan pengaduan"} initialValue={prompt.initialValue} onCancel={() => setPrompt(null)} onConfirm={(response) => { setPrompt(null); void act(prompt.complaintId, prompt.action, response); }} />}
+            {prompt && <TextPromptDialog title={prompt.action === "RESPOND" ? "Respon resmi Admin Kelurahan" : "Respon sebelum menyelesaikan pengaduan"} initialValue={prompt.initialValue} onCancel={() => setPrompt(null)} onConfirm={(response) => { setPrompt(null); void act(prompt.complaintId, prompt.action, response); }} />}
         </section>
     );
 }

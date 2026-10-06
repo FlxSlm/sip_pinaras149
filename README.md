@@ -1,43 +1,19 @@
- # SIP Pinaras
+# SIPP V2 — Master Documentation Pack (Corrected)
 
- Sistem Informasi Peduli Pinaras berbasis Next.js, Prisma 7, dan PostgreSQL.
+Paket ini dibuat untuk menyelesaikan ketidaksesuaian antara `AGENTS.md` dan file yang sebelumnya ada di Master Pack.
 
- ## Menjalankan proyek
+`AGENTS.md` versi ini hanya merujuk ke file yang benar-benar tersedia di dalam folder `docs/`.
 
- ```bash
- npm install
- npm run dev
- ```
+## Source of truth
+- `docs/PROJECT_REQUIREMENTS.md`
+- `docs/ROLE_PERMISSION_MATRIX.md`
+- `docs/DATABASE_DESIGN.md`
+- `docs/SECURITY_REQUIREMENTS.md`
+- `docs/NOTIFICATION_SPEC.md`
+- `docs/CMS_SPEC.md`
+- `docs/ACCEPTANCE_CRITERIA.md`
+- `docs/SIPP_PINARAS_MASTER_DATA.md`
+- `docs/REFACTOR_GUIDE.md`
 
- Salin `.env.example` menjadi `.env.local`, lalu sesuaikan `DATABASE_URL` dengan PostgreSQL lokal.
-
-Untuk mengaktifkan login warga, isi `AUTH_SECRET` dengan nilai acak panjang dan daftarkan callback OAuth berikut di masing-masing console provider:
-
-```text
-Google:   http://localhost:3000/api/auth/callback/google
-```
-
-Masukkan client ID dan secret Google ke `AUTH_GOOGLE_ID` dan `AUTH_GOOGLE_SECRET`. Tanpa kredensial provider tersebut, tombol akan tampil sebagai belum dikonfigurasi dan tidak akan mengirim request OAuth yang pasti gagal.
-
-Jika PostgreSQL berjalan sebagai service Windows dengan password berbeda, `DATABASE_URL` wajib memakai username, password, port, dan nama database yang benar. Project tidak dapat menebak password database lokal.
-
- ## Database
-
- Setelah PostgreSQL tersedia dan kredensial benar:
-
- ```bash
- npm run db:migrate -- --name init
- npm run db:seed
- ```
-
- Seed membuat 8 lingkungan, 1 Lurah, 8 Kepala Lingkungan, dan 1 warga contoh. Nama `Lingkungan 01` sampai `Lingkungan 08` masih placeholder karena nama resmi belum tersedia di dokumen proyek; ganti nilainya di `prisma/seed.ts` sebelum deployment.
-
- Password seed hanya untuk development dan harus diganti sebelum dipakai di lingkungan lain.
-
- ## Pemeriksaan
-
- ```bash
- npm run lint
- npm run typecheck
- npm run build
- ```
+## Untuk SIPP lama
+Gunakan Git checkpoint/tag untuk menyimpan V1, lalu buat branch `sipp-v2`. Audit repository terlebih dahulu sebelum menghapus atau mengganti modul.

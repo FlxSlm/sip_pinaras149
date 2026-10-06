@@ -1,33 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --surface: #f4f6f3;
-  --ink: #122b3a;
-  --muted: #66757d;
-  --line: #d9e1df;
-  --accent: #c52f35;
-  --soft-accent: #f8e5e2;
-  --gold: #b37713;
-  --gold-soft: #fff4d6;
+  --surface: #f4f8f6;
+  --surface-2: #e9f2ee;
+  --ink: #12323b;
+  --muted: #5b6e74;
+  --line: #d6e3de;
+  --brand: #1273a6;
+  --brand-dark: #0d5579;
+  --brand-deep: #0a3f5c;
+  --leaf: #2f9d6b;
+  --leaf-dark: #227a52;
+  --accent: #2f9d6b;
+  --soft-accent: #e2f3ec;
+  --gold: #c98a1b;
+  --gold-soft: #fbf1d9;
+  --danger: #c0392b;
+  --warning: #c98a1b;
+  --success: #2f9d6b;
+  --font-sans: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
 
 @theme inline {
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-deep: var(--brand-deep);
+  --color-leaf: var(--leaf);
+  --color-leaf-dark: var(--leaf-dark);
   --color-accent: var(--accent);
   --color-soft-accent: var(--soft-accent);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --font-sans: var(--font-sans);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--surface);
   color: var(--ink);
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.7), transparent 45%), linear-gradient(0deg, rgba(18, 43, 58, 0.025) 1px, transparent 1px);
-  background-size: auto, 100% 28px;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -35,7 +59,8 @@ a,
 input,
 select,
 textarea {
-  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease,
+    opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
 button:not(:disabled):active,
@@ -43,33 +68,25 @@ a:active {
   transform: translateY(1px);
 }
 
-.dashboard-content {
-  margin-left: 244px;
+/* Nature hero overlay: panorama Tomohon + blue/green gradient */
+.nature-hero {
+  background-image:
+    linear-gradient(160deg, rgba(8, 47, 66, 0.94) 0%, rgba(10, 63, 92, 0.78) 40%, rgba(31, 157, 107, 0.42) 100%),
+    url("/images/panorama-pinaras.png");
+  background-size: cover;
+  background-position: center;
 }
 
-@media (max-width: 900px) {
-  .dashboard-sidebar {
-    position: static;
-    width: 100%;
-    min-height: auto;
-  }
+.nature-footer {
+  background-image:
+    linear-gradient(180deg, rgba(8, 47, 66, 0.96) 0%, rgba(10, 63, 92, 0.9) 100%),
+    url("/images/panorama-pinaras.png");
+  background-size: cover;
+  background-position: center;
+}
 
-  .dashboard-sidebar nav {
-    display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-  }
-
-  .dashboard-sidebar nav a {
-    flex: 0 0 auto;
-  }
-
-  .dashboard-sidebar>div:last-child {
-    display: none;
-  }
-
-  .dashboard-content {
-    margin-left: 0;
-  }
+.soft-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(18, 50, 59, 0.06) 1px, transparent 0);
+  background-size: 22px 22px;
 }

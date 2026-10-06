@@ -1,73 +1,102 @@
-# SIP — Agent Instructions
+# SIPP V2 — AGENTS.md
 
-SIP is a community-service complaint and information system for Kelurahan Pinaras.
+## Mission
+Mengembangkan SIPP (Sistem Informasi Peduli Pinaras) menjadi PWA portal informasi kelurahan + pengaduan warga yang aman, dinamis, dan production-minded.
 
-Before coding, read:
+## Source of Truth
+Baca file berikut sebelum implementasi yang relevan:
+- `docs/PROJECT_REQUIREMENTS.md`
+- `docs/ROLE_PERMISSION_MATRIX.md`
+- `docs/DATABASE_DESIGN.md`
+- `docs/SECURITY_REQUIREMENTS.md`
+- `docs/NOTIFICATION_SPEC.md`
+- `docs/CMS_SPEC.md`
+- `docs/ACCEPTANCE_CRITERIA.md`
+- `docs/SIPP_PINARAS_MASTER_DATA.md`
+- `docs/REFACTOR_GUIDE.md`
 
-- `PROJECT_SPEC.md`
-- `AI_RULES.md`
-- `DATABASE_DESIGN.md`
-- `DEVELOPMENT_ROADMAP.md`
+Jika dokumen lama di repository bertentangan dengan dokumen V2 di atas, jangan diam-diam memilih salah satunya. Gunakan dokumen V2 sebagai target requirement dan laporkan konflik/risikonya sebelum perubahan besar.
 
-## Non-negotiable architecture
-
-- Next.js App Router
-- TypeScript
-- React 19.x
-- PostgreSQL
-- Prisma 7.x
-- Auth.js
-- Tailwind CSS
-- Zod
-
-## Business workflow
-
-```text
-Warga
-  ↓
-Kepala Lingkungan
-  ↓
-Lurah
-```
-
-Camat and higher levels are outside current scope.
+## Authentication
+- WARGA: Google OAuth only.
+- ADMIN_KELURAHAN: application credentials only.
+- Admin accounts are seeded by developer.
+- No admin self-registration.
+- Warga has no SIPP password.
+- Never add a password-change UI for Google-authenticated warga.
 
 ## Roles
+Exactly two database roles:
+- `WARGA`
+- `ADMIN_KELURAHAN`
 
-```text
-warga
-kepala_lingkungan
-lurah
-```
+Guest/public is not a database role.
 
-## Core security rules
+## Complaint
+Status:
+- `MENUNGGU`
+- `DIPROSES`
+- `SELESAI`
+- `DITOLAK`
 
-A Kepala Lingkungan may access only complaints belonging to their environment.
+Priority:
+- `NORMAL`
+- `PERLU_PERHATIAN`
 
-A warga may only access their own private complaints.
+Status and priority are separate. `MENUNGGU` means the complaint has not yet been opened/responded to by admin.
 
-Public pages may only expose published/sanitized complaint information.
+## Public privacy
+Never expose publicly:
+- reporter email
+- reporter phone
+- OAuth/provider IDs
+- private evidence path/storage key
+- internal notes
+- private audit data
+- raw private complaint fields
 
-OAuth provider identity must not be replaced by editable SIP username.
+Only intentionally published/sanitized projections may be shown publicly.
 
-## Development behavior
+## Pinaras data integrity
+- Never invent Pinaras facts.
+- Never attribute district-wide Tomohon Selatan data to Pinaras.
+- Preserve source year/provenance.
+- Do not silently correct source inconsistencies.
+- Missing data must remain null/placeholder and be reported for verification.
 
-- Work in small increments.
-- Do not big-bang the whole app.
-- Verify every meaningful change.
-- Do not claim completion without testing.
-- Do not silently change foundational architecture.
-- Keep documentation synchronized with schema/workflow changes.
+## Coding behavior
+1. Read relevant docs first.
+2. Inspect the current repository before refactor.
+3. Plan before changing multiple files.
+4. Work incrementally.
+5. Do not modify unrelated modules.
+6. Do not silently introduce roles.
+7. Do not silently change schema semantics.
+8. Explain destructive migrations before applying them.
+9. Enforce authorization server-side.
+10. Validate input server-side.
+11. Test data ownership.
+12. Never commit secrets.
+13. Run lint/typecheck/tests/build after meaningful changes.
+14. Do not claim completion without real verification.
 
-## Before final response for any coding task
+## Required workflow
+READ → PLAN → IMPLEMENT → VERIFY → REPORT
 
-Report:
+## Refactor rule
+Prefer:
+AUDIT → REUSE SAFE PARTS → REPLACE OBSOLETE PARTS → MIGRATE DATA CAREFULLY → VERIFY
 
-- what changed;
-- why it changed;
-- tests/checks run;
-- result;
-- remaining limitations.
+Do not delete the entire legacy codebase before an audit.
+
+## Report
+After implementation, report:
+- files created/changed
+- migrations
+- tests added/changed
+- commands run
+- actual verification results
+- unresolved risks
 
 <!-- BEGIN:nextjs-agent-rules -->
 

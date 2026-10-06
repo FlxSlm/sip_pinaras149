@@ -16,8 +16,8 @@ type PublicComplaint = {
 
 const statusLabels: Record<string, string> = {
     SELESAI: "Selesai",
-    DALAM_PROSES: "Dalam proses",
-    DI_LUAR_KEWENANGAN: "Di luar kewenangan",
+    DALAM_PROSES: "Diproses",
+    DI_LUAR_KEWENANGAN: "Ditolak",
 };
 
 export function PublicComplaintList({ complaints }: { complaints: PublicComplaint[] }) {

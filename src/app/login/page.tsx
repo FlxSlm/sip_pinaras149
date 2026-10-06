@@ -1,8 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { getProviders, getSession, signIn } from "next-auth/react";
-import { useEffect } from "react";
 import { getRoleHome } from "@/lib/authorization";
 import Image from "next/image";
 
@@ -45,63 +44,68 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[var(--surface)] px-5 py-10 sm:px-8 sm:py-16">
-            <div className="mx-auto max-w-md rounded-[2rem] border border-[var(--line)] bg-white p-6 shadow-[0_20px_50px_rgba(20,40,55,0.1)] sm:p-9">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
-                    SIP Pinaras
-                </p>
-                <h1 className="mt-4 text-4xl font-bold text-[var(--ink)]">Masuk ke layanan</h1>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Warga masuk dengan akun Google. Petugas menggunakan username dan password yang diberikan kelurahan.
-                </p>
-
-                <div className="mt-8">
-                    <button
-                        type="button"
-                        disabled={!providers?.google}
-                        onClick={() => signIn("google", { callbackUrl: getCallbackUrl() })}
-                        className="inline-flex items-center gap-3 rounded-full bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                        <Image src="/images/google-logo.jpg" alt="" width={20} height={20} className="h-5 w-5 rounded-full bg-white object-contain" />
-                        {providers === null ? "Memuat..." : providers.google ? "Lanjut dengan Google" : "Google belum dikonfigurasi"}
-                    </button>
+        <main className="nature-hero grid min-h-screen place-items-center px-5 py-10 sm:px-8">
+            <div className="w-full max-w-md rounded-[1.75rem] border border-white/20 bg-white p-7 shadow-[0_24px_60px_rgba(8,47,66,0.28)] sm:p-9">
+                <div className="flex items-center gap-3">
+                    <div className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[var(--leaf)] to-[var(--brand)] text-lg font-black text-white">
+                        P
+                    </div>
+                    <div>
+                        <p className="text-lg font-extrabold text-[var(--ink)]">SIP Pinaras</p>
+                        <p className="text-xs text-[var(--muted)]">Sistem Informasi Peduli Pinaras</p>
+                    </div>
                 </div>
 
-                <div className="my-8 flex items-center gap-3 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+                <h1 className="mt-7 text-3xl font-extrabold text-[var(--ink)]">Masuk ke layanan</h1>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                    Warga masuk dengan akun Google. Admin Kelurahan menggunakan kredensial aplikasi.
+                </p>
+
+                <button
+                    type="button"
+                    disabled={!providers?.google}
+                    onClick={() => signIn("google", { callbackUrl: getCallbackUrl() })}
+                    className="mt-7 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--line)] bg-white px-4 py-3.5 text-sm font-bold text-[var(--ink)] shadow-sm hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <Image src="/images/google-logo.jpg" alt="" width={20} height={20} className="size-5 rounded-full object-contain" />
+                    {providers === null ? "Memuat..." : providers.google ? "Lanjut dengan Google" : "Google belum dikonfigurasi"}
+                </button>
+
+                <div className="my-7 flex items-center gap-3 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
                     <span className="h-px flex-1 bg-[var(--line)]" />
-                    Petugas
+                    Admin Kelurahan
                     <span className="h-px flex-1 bg-[var(--line)]" />
                 </div>
 
                 <form className="space-y-4" onSubmit={handleStaffLogin}>
-                    <label className="block text-sm font-medium text-[var(--ink)]">
+                    <label className="block text-sm font-semibold text-[var(--ink)]">
                         Username
                         <input
                             value={username}
                             onChange={(event) => setUsername(event.target.value)}
                             autoComplete="username"
-                            className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-3 outline-none focus:border-[var(--accent)]"
+                            className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-[var(--ink)] outline-none focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/15"
                             required
                         />
                     </label>
-                    <label className="block text-sm font-medium text-[var(--ink)]">
+                    <label className="block text-sm font-semibold text-[var(--ink)]">
                         Password
                         <input
                             type="password"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                             autoComplete="current-password"
-                            className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-3 outline-none focus:border-[var(--accent)]"
+                            className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-[var(--ink)] outline-none focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/15"
                             required
                         />
                     </label>
-                    {error && <p className="text-sm text-red-700">Username atau password tidak valid.</p>}
+                    {error && <p className="text-sm font-medium text-[var(--danger)]">Username atau password tidak valid.</p>}
                     <button
                         type="submit"
                         disabled={pending}
-                        className="w-full rounded-full bg-[var(--accent)] px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+                        className="w-full rounded-xl bg-[var(--brand)] px-4 py-3.5 text-sm font-bold text-white hover:bg-[var(--brand-dark)] disabled:opacity-60"
                     >
-                        {pending ? "Memeriksa..." : "Masuk sebagai petugas"}
+                        {pending ? "Memeriksa..." : "Masuk sebagai Admin Kelurahan"}
                     </button>
                 </form>
             </div>

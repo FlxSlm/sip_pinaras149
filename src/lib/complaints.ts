@@ -8,10 +8,14 @@ export const complaintInputSchema = z.object({
     description: z.string().trim().min(1, "Deskripsi wajib diisi.").max(5000, "Deskripsi maksimal 5.000 karakter."),
 });
 
-function periodKey(date: Date): string {
+export function periodKey(date: Date): string {
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     return `${year}${month}`;
+}
+
+export function formatTicketNumber(key: string, sequence: number): string {
+    return `LPR-${key}-${String(sequence).padStart(3, "0")}`;
 }
 
 export async function createComplaint(
@@ -37,7 +41,7 @@ export async function createComplaint(
             update: { currentValue: { increment: 1 } },
             select: { currentValue: true },
         });
-        const ticketNumber = `LPR-${key}-${String(sequence.currentValue).padStart(3, "0")}`;
+        const ticketNumber = formatTicketNumber(key, sequence.currentValue);
 
         const complaint = await transaction.complaint.create({
             data: {
