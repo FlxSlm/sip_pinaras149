@@ -23,6 +23,7 @@ export async function GET() {
             handlingStatus: true,
             internalNote: true,
             officialResponse: true,
+            evidences: { select: { id: true, path: true, mimeType: true } },
             respondedAt: true,
             createdAt: true,
             lingkungan: { select: { name: true, code: true } },

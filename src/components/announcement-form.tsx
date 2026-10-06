@@ -11,7 +11,7 @@ export function AnnouncementForm() {
         try {
             const response = await fetch("/api/pengumuman", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: form.get("title"), content: form.get("content"), isPinned: form.get("isPinned") === "on" }) });
             const result = await response.json() as { message?: string; announcement?: { title: string } };
-            setMessage(result.announcement ? "Pengumuman diterbitkan." : result.message ?? "Pengumuman tidak dapat dibuat.");
+            setMessage(response.ok ? "Pengumuman diterbitkan." : result.message ?? "Pengumuman tidak dapat dibuat.");
             if (response.ok) event.currentTarget.reset();
         } catch { setMessage("Pengumuman tidak dapat dibuat."); } finally { setPending(false); }
     }

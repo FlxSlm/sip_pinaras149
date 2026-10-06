@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { TextPromptDialog } from "@/components/text-prompt-dialog";
 
 type Complaint = {
@@ -13,6 +14,7 @@ type Complaint = {
     internalNote: string | null;
     createdAt: string;
     reporter: { name: string | null; email: string | null; phone: string | null };
+    evidences: Array<{ id: string; path: string; mimeType: string }>;
 };
 
 export function NeighborhoodInbox({ initialComplaints }: { initialComplaints: Complaint[] }) {
@@ -58,6 +60,7 @@ export function NeighborhoodInbox({ initialComplaints }: { initialComplaints: Co
                     <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-[var(--ink)]">{complaint.description}</p>
                     <p className="mt-4 text-sm text-[var(--muted)]">Pelapor: {complaint.reporter.name ?? "Tanpa nama"} · {complaint.reporter.phone ?? complaint.reporter.email ?? "Kontak tidak tersedia"}</p>
                     {complaint.internalNote && <p className="mt-3 rounded-md bg-[var(--surface)] p-3 text-sm text-[var(--muted)]">Catatan internal: {complaint.internalNote}</p>}
+                    {complaint.evidences.length > 0 && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{complaint.evidences.map((evidence) => <div key={evidence.id} className="relative aspect-video overflow-hidden rounded-md"><Image src={`/api/pengaduan/${complaint.ticketNumber}/evidence/${evidence.id}`} alt="Bukti pengaduan" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" /></div>)}</div>}
                     <div className="mt-5 flex flex-wrap gap-2">
                         {complaint.handlingStatus === "DIAJUKAN" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "VERIFY")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Verifikasi</button>}
                         {complaint.handlingStatus === "DIVERIFIKASI" && <button disabled={pendingId === complaint.id} onClick={() => act(complaint.id, "FORWARD")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Teruskan ke Lurah</button>}

@@ -27,7 +27,7 @@ Inspect the repository and report:
 
 Propose only the smallest safe next step.
 
-## Prompt 1 — Bootstrap
+## Prompt 1 — Bootstrap 
 
 Implement only project foundation:
 

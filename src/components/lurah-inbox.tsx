@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { PublicationControl } from "@/components/publication-control";
 import { TextPromptDialog } from "@/components/text-prompt-dialog";
 
@@ -17,6 +18,7 @@ type Complaint = {
     createdAt: string;
     lingkungan: { name: string; code: string };
     reporter: { name: string | null; email: string | null; phone: string | null };
+    evidences: Array<{ id: string; path: string; mimeType: string }>;
 };
 
 export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint[] }) {
@@ -67,6 +69,7 @@ export function LurahInbox({ initialComplaints }: { initialComplaints: Complaint
                     <p className="mt-4 text-sm text-[var(--muted)]">Pelapor: {complaint.reporter.name ?? "Tanpa nama"} · {complaint.reporter.phone ?? complaint.reporter.email ?? "Kontak tidak tersedia"}</p>
                     {complaint.internalNote && <p className="mt-3 rounded-md bg-[var(--surface)] p-3 text-sm text-[var(--muted)]">Catatan internal: {complaint.internalNote}</p>}
                     {complaint.officialResponse && <p className="mt-3 rounded-md border border-[var(--line)] p-3 text-sm text-[var(--ink)]">Respon resmi: {complaint.officialResponse}</p>}
+                    {complaint.evidences.length > 0 && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{complaint.evidences.map((evidence) => <div key={evidence.id} className="relative aspect-video overflow-hidden rounded-md"><Image src={`/api/pengaduan/${complaint.ticketNumber}/evidence/${evidence.id}`} alt="Bukti pengaduan" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" /></div>)}</div>}
                     <div className="mt-5 flex flex-wrap gap-2">
                         {complaint.handlingStatus === "DITERUSKAN_KE_LURAH" && <><button disabled={pendingId === complaint.id} onClick={() => void act(complaint.id, "START")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Mulai proses</button><button disabled={pendingId === complaint.id} onClick={() => void act(complaint.id, "OUTSIDE_AUTHORITY")} className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink)] disabled:opacity-60">Di luar kewenangan</button></>}
                         {complaint.handlingStatus === "DALAM_PROSES" && <button disabled={pendingId === complaint.id} onClick={() => askForResponse(complaint, "COMPLETE")} className="rounded-md bg-[var(--ink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Selesaikan</button>}

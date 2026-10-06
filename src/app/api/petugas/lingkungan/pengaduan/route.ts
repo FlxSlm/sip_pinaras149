@@ -21,6 +21,7 @@ export async function GET() {
             category: true,
             description: true,
             evidencePath: true,
+            evidences: { select: { id: true, path: true, mimeType: true } },
             handlingStatus: true,
             internalNote: true,
             createdAt: true,

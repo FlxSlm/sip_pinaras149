@@ -42,3 +42,34 @@ button:not(:disabled):active,
 a:active {
   transform: translateY(1px);
 }
+
+.dashboard-content {
+  margin-left: 244px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-sidebar {
+    position: static;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .dashboard-sidebar nav {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .dashboard-sidebar nav a {
+    flex: 0 0 auto;
+  }
+
+  .dashboard-sidebar>div:last-child {
+    display: none;
+  }
+
+  .dashboard-content {
+    margin-left: 0;
+  }
+}

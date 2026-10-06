@@ -10,6 +10,7 @@ type Environment = {
 export function ComplaintForm({ environments }: { environments: Environment[] }) {
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
+    const [fileNames, setFileNames] = useState<string[]>([]);
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -64,7 +65,13 @@ export function ComplaintForm({ environments }: { environments: Environment[] })
             </div>
             <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="evidence">Foto bukti (opsional, maksimal 5 MB)</label>
-                <input id="evidence" name="evidence" type="file" multiple accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full cursor-pointer rounded-md border border-[var(--line)] bg-white text-sm file:mr-3 file:border-0 file:bg-[var(--ink)] file:px-4 file:py-3 file:font-semibold file:text-white hover:file:bg-[var(--accent)]" />
+                <label htmlFor="evidence" className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#9bb8d5] bg-[#f5f9ff] px-5 py-7 text-center hover:border-[var(--accent)] hover:bg-white">
+                    <span className="text-2xl text-[var(--accent)]">＋</span>
+                    <span className="mt-2 text-sm font-semibold text-[var(--ink)]">Tarik foto ke sini atau pilih file</span>
+                    <span className="mt-1 text-xs text-[var(--muted)]">JPG, PNG, atau WEBP · maksimal 5 MB per file</span>
+                    {fileNames.length > 0 && <span className="mt-3 text-xs font-semibold text-[var(--accent)]">{fileNames.join(", ")}</span>}
+                </label>
+                <input id="evidence" name="evidence" type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => setFileNames(Array.from(event.target.files ?? []).map((file) => file.name))} />
             </div>
             {message && <p className="text-sm text-[var(--muted)]" role="status">{message}</p>}
             <button type="submit" disabled={pending} className="rounded-md bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">

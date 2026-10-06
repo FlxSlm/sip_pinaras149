@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
-type Notification = { id: string; title: string; message: string; readAt: string | null; createdAt: string };
+type Notification = { id: string; title: string; message: string; readAt: string | null; createdAt: string; complaint: { ticketNumber: string } | null; announcementId: string | null };
 
 export function NotificationBell() {
     const [open, setOpen] = useState(false);
@@ -40,7 +41,11 @@ export function NotificationBell() {
             <div className="flex items-center justify-between"><h2 className="font-semibold text-[var(--ink)]">Notifikasi</h2><button type="button" onClick={() => setOpen(false)} className="text-sm text-[var(--muted)]">Tutup</button></div>
             <div className="mt-3 max-h-72 space-y-3 overflow-auto">
                 {items.length === 0 && <p className="text-sm text-[var(--muted)]">Belum ada notifikasi.</p>}
-                {items.map((item) => <article key={item.id} className="border-b border-[var(--line)] pb-3 last:border-0"><p className="text-sm font-semibold text-[var(--ink)]">{item.title}</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">{item.message}</p></article>)}
+                {items.map((item) => {
+                    const href = item.complaint ? `/pengaduan/${item.complaint.ticketNumber}` : item.announcementId ? "/pengumuman" : null;
+                    const content = <><p className="text-sm font-semibold text-[var(--ink)]">{item.title}</p><p className="mt-1 text-xs leading-5 text-[var(--muted)]">{item.message}</p><time className="mt-2 block text-[11px] text-[var(--muted)]">{new Date(item.createdAt).toLocaleString("id-ID")}</time></>;
+                    return href ? <Link href={href} key={item.id} className="block border-b border-[var(--line)] pb-3 last:border-0 hover:bg-[var(--surface)]">{content}</Link> : <article key={item.id} className="border-b border-[var(--line)] pb-3 last:border-0">{content}</article>;
+                })}
             </div>
         </div>}
     </div>;

@@ -10,7 +10,7 @@ export async function GET() {
         where: { recipientId: session.user.id },
         orderBy: { createdAt: "desc" },
         take: 20,
-        select: { id: true, title: true, message: true, readAt: true, createdAt: true },
+        select: { id: true, title: true, message: true, readAt: true, createdAt: true, complaint: { select: { ticketNumber: true } }, announcementId: true },
     });
     return NextResponse.json({ notifications, unreadCount: notifications.filter((item) => !item.readAt).length });
 }

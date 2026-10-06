@@ -62,6 +62,7 @@ export default function Home() {
           </div>
         </div>
         <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold text-[var(--accent)]">
+          <Link href="/pengumuman">Lihat pengumuman kelurahan</Link>
           <Link href="/pengaduan">Lihat pengaduan terpublikasi</Link>
           <a href="#profil">Profil Kelurahan</a>
           <a href="#sejarah">Sejarah Kelurahan</a>
