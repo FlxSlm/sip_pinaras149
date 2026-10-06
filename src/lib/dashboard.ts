@@ -1,11 +1,12 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 
-export async function getComplaintStats(prisma: PrismaClient, where: { reporterUserId?: string; lingkunganId?: string }) {
-    const [total, selesai, dalamProses, ditolak] = await Promise.all([
+export async function getComplaintStats(prisma: PrismaClient, where: { reporterUserId?: string } = {}) {
+    const [total, menunggu, diproses, selesai, ditolak] = await Promise.all([
         prisma.complaint.count({ where }),
-        prisma.complaint.count({ where: { ...where, handlingStatus: "SELESAI" } }),
-        prisma.complaint.count({ where: { ...where, handlingStatus: "DALAM_PROSES" } }),
-        prisma.complaint.count({ where: { ...where, handlingStatus: "DI_LUAR_KEWENANGAN" } }),
+        prisma.complaint.count({ where: { ...where, status: "MENUNGGU" } }),
+        prisma.complaint.count({ where: { ...where, status: "DIPROSES" } }),
+        prisma.complaint.count({ where: { ...where, status: "SELESAI" } }),
+        prisma.complaint.count({ where: { ...where, status: "DITOLAK" } }),
     ]);
-    return { total, selesai, dalamProses, ditolak };
+    return { total, menunggu, diproses, selesai, ditolak };
 }

@@ -2,13 +2,11 @@ import { describe, expect, it } from "vitest";
 import { complaintStatusLabel, complaintStatusTone } from "@/lib/status-labels";
 
 describe("complaintStatusLabel", () => {
-    it("memetakan status lama ke label V2", () => {
-        expect(complaintStatusLabel("DIAJUKAN")).toBe("Menunggu");
-        expect(complaintStatusLabel("DIVERIFIKASI")).toBe("Menunggu");
-        expect(complaintStatusLabel("DITERUSKAN_KE_LURAH")).toBe("Menunggu");
-        expect(complaintStatusLabel("DALAM_PROSES")).toBe("Diproses");
+    it("memetakan status V2 ke label", () => {
+        expect(complaintStatusLabel("MENUNGGU")).toBe("Menunggu");
+        expect(complaintStatusLabel("DIPROSES")).toBe("Diproses");
         expect(complaintStatusLabel("SELESAI")).toBe("Selesai");
-        expect(complaintStatusLabel("DI_LUAR_KEWENANGAN")).toBe("Ditolak");
+        expect(complaintStatusLabel("DITOLAK")).toBe("Ditolak");
     });
 
     it("mengembalikan nilai asli untuk status tidak dikenal", () => {
@@ -19,8 +17,8 @@ describe("complaintStatusLabel", () => {
 describe("complaintStatusTone", () => {
     it("memberikan tone yang tepat", () => {
         expect(complaintStatusTone("SELESAI")).toBe("done");
-        expect(complaintStatusTone("DI_LUAR_KEWENANGAN")).toBe("rejected");
-        expect(complaintStatusTone("DALAM_PROSES")).toBe("progress");
-        expect(complaintStatusTone("DIAJUKAN")).toBe("waiting");
+        expect(complaintStatusTone("DITOLAK")).toBe("rejected");
+        expect(complaintStatusTone("DIPROSES")).toBe("progress");
+        expect(complaintStatusTone("MENUNGGU")).toBe("waiting");
     });
 });

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/logout-button";
 import { NotificationBell } from "@/components/notification-bell";
 
-type DashboardRole = "warga" | "kepala_lingkungan" | "lurah";
+type DashboardRole = "warga" | "admin";
 
 const icon = {
     dashboard: <path d="M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-18v6h8V3h-8Z" />,
@@ -24,8 +24,8 @@ function MenuIcon({ d }: { d: ReactNode }) {
 }
 
 export function DashboardShell({ role, userName, location, children }: { role: DashboardRole; userName: string; location?: string; children: ReactNode }) {
-    const isAdmin = role === "lurah" || role === "kepala_lingkungan";
-    const basePath = role === "warga" ? "/warga" : role === "lurah" ? "/petugas/lurah" : "/petugas/lingkungan";
+    const isAdmin = role === "admin";
+    const basePath = isAdmin ? "/admin" : "/warga";
     const roleLabel = isAdmin ? "Admin Kelurahan" : "Warga Pinaras";
 
     const menu = isAdmin
@@ -33,6 +33,7 @@ export function DashboardShell({ role, userName, location, children }: { role: D
             { label: "Dashboard", href: basePath, icon: icon.dashboard },
             { label: "Pengaduan", href: `${basePath}#pengaduan`, icon: icon.complaint },
             { label: "Pengumuman", href: "/pengumuman", icon: icon.announce },
+            { label: "Konten Landing Page", href: "/admin/konten", icon: icon.content },
             { label: "Profil", href: `${basePath}#profil`, icon: icon.profile },
         ]
         : [
@@ -78,7 +79,7 @@ export function DashboardShell({ role, userName, location, children }: { role: D
                         <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,63,92,0.85)] to-transparent" />
                     </div>
                     <div className="bg-[var(--brand-deep)] p-4">
-                        <p className="font-serif text-sm italic text-white/90">Bersama kita wujudkan Pinaras yang lebih baik.</p>
+                        <p className="text-sm italic text-white/90">Bersama kita wujudkan Pinaras yang lebih baik.</p>
                     </div>
                 </div>
             </aside>

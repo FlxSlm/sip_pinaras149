@@ -8,35 +8,29 @@ datasource db {
 }
 
 enum UserRole {
-  warga
-  kepala_lingkungan
-  lurah
+  WARGA
+  ADMIN_KELURAHAN
 }
 
-enum HandlingStatus {
-  DIAJUKAN
-  DIVERIFIKASI
-  DITERUSKAN_KE_LURAH
-  DALAM_PROSES
+enum ComplaintStatus {
+  MENUNGGU
+  DIPROSES
   SELESAI
-  DI_LUAR_KEWENANGAN
+  DITOLAK
 }
 
-enum PublicationStatus {
-  DRAFT
-  PUBLISHED
+enum ComplaintPriority {
+  NORMAL
+  PERLU_PERHATIAN
 }
 
 enum ComplaintAction {
   CREATED
-  VERIFIED
-  FORWARDED_TO_LURAH
-  INTERNAL_NOTE_ADDED
+  OPENED
   STATUS_CHANGED
+  PRIORITY_CHANGED
   RESPONSE_ADDED
-  PUBLISHED
-  UNPUBLISHED
-  RATED
+  NOTE_ADDED
 }
 
 enum NotificationType {
@@ -45,20 +39,29 @@ enum NotificationType {
   ANNOUNCEMENT_PUBLISHED
 }
 
+enum AnnouncementMediaType {
+  TEXT
+  PDF
+  VIDEO
+}
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id            String         @id @default(cuid())
-  username      String         @unique
+  username      String?        @unique
   name          String?
   email         String?        @unique
   emailVerified DateTime?
   image         String?
-  phone         String?
   passwordHash  String?
-  role          UserRole       @default(warga)
-  lingkunganId  String?
+  role          UserRole       @default(WARGA)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  lingkungan    Lingkungan?    @relation(fields: [lingkunganId], references: [id], onDelete: SetNull)
   accounts      Account[]
   sessions      Session[]
   complaints    Complaint[]    @relation("ComplaintReporter")
@@ -67,49 +70,43 @@ model User {
   notifications Notification[]
 
   @@index([role])
-  @@index([lingkunganId])
 }
 
 model Lingkungan {
-  id         String      @id @default(cuid())
-  name       String
-  code       String      @unique
-  active     Boolean     @default(true)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  users      User[]
-  complaints Complaint[]
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Complaint {
-  id                String            @id @default(cuid())
-  reporterUserId    String
-  lingkunganId      String
-  ticketNumber      String            @unique
-  title             String
-  category          String
-  description       String
-  evidencePath      String?
-  handlingStatus    HandlingStatus    @default(DIAJUKAN)
-  internalNote      String?
-  officialResponse  String?
-  respondedAt       DateTime?
-  rating            Int?
-  ratedAt           DateTime?
-  publicationStatus PublicationStatus @default(DRAFT)
-  publishedAt       DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  reporter          User              @relation("ComplaintReporter", fields: [reporterUserId], references: [id], onDelete: Restrict)
-  lingkungan        Lingkungan        @relation(fields: [lingkunganId], references: [id], onDelete: Restrict)
-  logs              ComplaintLog[]
-  evidences         ComplaintEvidence[]
-  notifications     Notification[]
+  id               String            @id @default(cuid())
+  reporterUserId   String
+  ticketNumber     String            @unique
+  title            String
+  category         String
+  description      String
+  location         String?
+  status           ComplaintStatus   @default(MENUNGGU)
+  priority         ComplaintPriority?
+  internalNote     String?
+  officialResponse String?
+  respondedAt      DateTime?
+  openedAt         DateTime?
+  completedAt      DateTime?
+  rejectedAt       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  reporter         User              @relation("ComplaintReporter", fields: [reporterUserId], references: [id], onDelete: Restrict)
+  logs             ComplaintLog[]
+  evidences        ComplaintEvidence[]
+  notifications    Notification[]
 
   @@index([reporterUserId])
-  @@index([lingkunganId])
-  @@index([handlingStatus])
-  @@index([publicationStatus])
+  @@index([status])
+  @@index([priority])
   @@index([createdAt])
 }
 
@@ -126,16 +123,18 @@ model ComplaintEvidence {
 }
 
 model ComplaintLog {
-  id          String          @id @default(cuid())
+  id          String             @id @default(cuid())
   complaintId String
   actorUserId String?
   action      ComplaintAction
-  fromStatus  HandlingStatus?
-  toStatus    HandlingStatus?
+  fromStatus  ComplaintStatus?
+  toStatus    ComplaintStatus?
+  oldPriority ComplaintPriority?
+  newPriority ComplaintPriority?
   note        String?
-  createdAt   DateTime        @default(now())
-  complaint   Complaint       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
-  actor       User?           @relation("ComplaintLogActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+  complaint   Complaint          @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  actor       User?              @relation("ComplaintLogActor", fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([complaintId])
   @@index([actorUserId])
@@ -143,19 +142,21 @@ model ComplaintLog {
 }
 
 model Announcement {
-  id          String   @id @default(cuid())
+  id          String               @id @default(cuid())
   title       String
-  slug        String   @unique
+  slug        String               @unique
   content     String
-  pdfPath     String?
-  isPinned    Boolean  @default(false)
-  published   Boolean  @default(false)
+  mediaType   AnnouncementMediaType @default(TEXT)
+  mediaRef    String?
+  isPinned    Boolean              @default(false)
+  status      AnnouncementStatus   @default(DRAFT)
+  publishedAt DateTime?
   createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   User     @relation("AnnouncementCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  createdBy   User                 @relation("AnnouncementCreator", fields: [createdById], references: [id], onDelete: Restrict)
 
-  @@index([published])
+  @@index([status])
   @@index([createdById])
 }
 
@@ -216,4 +217,64 @@ model TicketSequence {
   periodKey    String   @id
   currentValue Int      @default(0)
   updatedAt    DateTime @updatedAt
+}
+
+model SiteContent {
+  key        String   @id
+  value      Json
+  updatedAt  DateTime @updatedAt
+  updatedById String?
+}
+
+model Statistic {
+  id          String   @id @default(cuid())
+  label       String
+  value       String
+  unit        String?
+  source      String
+  sourceYear  String?
+  sourcePage  String?
+  verifiedAt  DateTime?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Potential {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageRef    String?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  sourceNote  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Facility {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  description String?
+  address     String?
+  imageRef    String?
+  published   Boolean  @default(true)
+  sourceNote  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GalleryMedia {
+  id          String   @id @default(cuid())
+  storageKey  String
+  mimeType    String
+  sizeBytes   Int
+  caption     String?
+  credit      String?
+  category    String?
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }

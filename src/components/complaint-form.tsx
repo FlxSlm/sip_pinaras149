@@ -2,12 +2,7 @@
 
 import { FormEvent, useState } from "react";
 
-type Environment = {
-    id: string;
-    name: string;
-};
-
-export function ComplaintForm({ environments }: { environments: Environment[] }) {
+export function ComplaintForm() {
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
     const [fileNames, setFileNames] = useState<string[]>([]);
@@ -36,19 +31,12 @@ export function ComplaintForm({ environments }: { environments: Environment[] })
     return (
         <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
             <div>
-                <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="lingkunganId">Lingkungan</label>
-                <select id="lingkunganId" name="lingkunganId" required className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3">
-                    <option value="">Pilih lingkungan</option>
-                    {environments.map((environment) => <option key={environment.id} value={environment.id}>{environment.name}</option>)}
-                </select>
-            </div>
-            <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="title">Judul pengaduan</label>
-                <input id="title" name="title" required minLength={5} maxLength={120} className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3" />
+                <input id="title" name="title" required minLength={5} maxLength={120} placeholder="Contoh: Jalan rusak di depan gang" className="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-3 text-[var(--ink)] outline-none focus:border-[var(--brand)]" />
             </div>
             <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="category">Kategori</label>
-                <select id="category" name="category" required className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3">
+                <select id="category" name="category" required className="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-3 text-[var(--ink)] outline-none focus:border-[var(--brand)]">
                     <option value="">Pilih kategori</option>
                     <option value="Infrastruktur">Infrastruktur</option>
                     <option value="Kebersihan">Kebersihan</option>
@@ -60,21 +48,25 @@ export function ComplaintForm({ environments }: { environments: Environment[] })
                 </select>
             </div>
             <div>
+                <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="location">Lokasi kejadian (opsional)</label>
+                <input id="location" name="location" maxLength={200} placeholder="Contoh: Jl. Melati, dekat posyandu" className="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-3 text-[var(--ink)] outline-none focus:border-[var(--brand)]" />
+            </div>
+            <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="description">Deskripsi</label>
-                <textarea id="description" name="description" required maxLength={5000} rows={6} className="mt-1 w-full rounded-md border border-[var(--line)] px-3 py-3" />
+                <textarea id="description" name="description" required maxLength={5000} rows={6} placeholder="Jelaskan permasalahan Anda secara jelas." className="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-3 text-[var(--ink)] outline-none focus:border-[var(--brand)]" />
             </div>
             <div>
                 <label className="block text-sm font-medium text-[var(--ink)]" htmlFor="evidence">Foto bukti (opsional, maksimal 5 MB)</label>
-                <label htmlFor="evidence" className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#9bb8d5] bg-[#f5f9ff] px-5 py-7 text-center hover:border-[var(--accent)] hover:bg-white">
-                    <span className="text-2xl text-[var(--accent)]">＋</span>
+                <label htmlFor="evidence" className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#9bb8d5] bg-[#f5f9ff] px-5 py-7 text-center hover:border-[var(--brand)] hover:bg-white">
+                    <span className="text-2xl text-[var(--brand)]">＋</span>
                     <span className="mt-2 text-sm font-semibold text-[var(--ink)]">Tarik foto ke sini atau pilih file</span>
                     <span className="mt-1 text-xs text-[var(--muted)]">JPG, PNG, atau WEBP · maksimal 5 MB per file</span>
-                    {fileNames.length > 0 && <span className="mt-3 text-xs font-semibold text-[var(--accent)]">{fileNames.join(", ")}</span>}
+                    {fileNames.length > 0 && <span className="mt-3 text-xs font-semibold text-[var(--brand)]">{fileNames.join(", ")}</span>}
                 </label>
                 <input id="evidence" name="evidence" type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => setFileNames(Array.from(event.target.files ?? []).map((file) => file.name))} />
             </div>
             {message && <p className="text-sm text-[var(--muted)]" role="status">{message}</p>}
-            <button type="submit" disabled={pending} className="rounded-md bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
+            <button type="submit" disabled={pending} className="rounded-lg bg-[var(--brand)] px-5 py-3 text-sm font-bold text-white disabled:opacity-60">
                 {pending ? "Mengirim..." : "Kirim pengaduan"}
             </button>
         </form>

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (!session) {
         return NextResponse.json({ message: "Tidak terautentikasi." }, { status: 401 });
     }
-    if (session.user.role !== "warga") {
+    if (session.user.role !== "WARGA") {
         return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
     }
 
@@ -45,10 +45,10 @@ export async function POST(request: Request) {
     }
 
     const parsed = complaintInputSchema.safeParse({
-        lingkunganId: formData.get("lingkunganId"),
         title: formData.get("title"),
         category: formData.get("category"),
         description: formData.get("description"),
+        location: formData.get("location") || undefined,
     });
     if (!parsed.success) {
         return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Data pengaduan tidak valid." }, { status: 400 });
@@ -82,15 +82,9 @@ export async function POST(request: Request) {
 
     try {
         const complaint = await createComplaint(prisma, parsed.data, session.user.id, evidenceFiles);
-        return NextResponse.json({
-            message: "Pengaduan berhasil dikirim.",
-            complaint,
-        }, { status: 201 });
-    } catch (error) {
+        return NextResponse.json({ message: "Pengaduan berhasil dikirim.", complaint }, { status: 201 });
+    } catch {
         await Promise.all(storedFilePaths.map((filePath) => unlink(filePath).catch(() => undefined)));
-        if (error instanceof Error && error.message === "LINGKUNGAN_INVALID") {
-            return NextResponse.json({ message: "Lingkungan tidak tersedia." }, { status: 400 });
-        }
         return NextResponse.json({ message: "Pengaduan tidak dapat disimpan." }, { status: 500 });
     }
 }

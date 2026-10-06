@@ -8,37 +8,34 @@ import { getComplaintStats } from "@/lib/dashboard";
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard-shell";
 
+export const dynamic = "force-dynamic";
+
 export default async function WargaPage() {
     const session = await getServerSession(authOptions);
     if (!session) redirect("/login");
-    if (session.user.role !== "warga") redirect("/petugas");
-
-    const environments = await prisma.lingkungan.findMany({
-        where: { active: true },
-        select: { id: true, name: true },
-        orderBy: { code: "asc" },
-    });
+    if (session.user.role !== "WARGA") redirect("/admin");
 
     const [complaints, stats] = await Promise.all([
         prisma.complaint.findMany({
             where: { reporterUserId: session.user.id },
             orderBy: { createdAt: "desc" },
-            select: { id: true, ticketNumber: true, title: true, category: true, handlingStatus: true, createdAt: true },
+            select: { id: true, ticketNumber: true, title: true, category: true, status: true, createdAt: true },
         }),
         getComplaintStats(prisma, { reporterUserId: session.user.id }),
     ]);
 
     const statCards = [
         { label: "Total laporan", value: stats.total },
+        { label: "Menunggu", value: stats.menunggu },
+        { label: "Diproses", value: stats.diproses },
         { label: "Selesai", value: stats.selesai },
-        { label: "Diproses", value: stats.dalamProses },
         { label: "Ditolak", value: stats.ditolak },
     ];
 
     return (
         <DashboardShell role="warga" userName={session.user.name ?? session.user.email ?? "Warga"}>
             <div className="mx-auto max-w-5xl">
-                <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     {statCards.map((item) => (
                         <div key={item.label} className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
                             <p className="text-sm text-[var(--muted)]">{item.label}</p>
@@ -50,7 +47,7 @@ export default async function WargaPage() {
                 <section id="buat" className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
                     <h2 className="text-xl font-extrabold text-[var(--ink)]">Buat pengaduan</h2>
                     <p className="mt-1 text-sm text-[var(--muted)]">Pengaduan Anda akan diteruskan kepada Admin Kelurahan untuk ditindaklanjuti.</p>
-                    <ComplaintForm environments={environments} />
+                    <ComplaintForm />
                 </section>
 
                 <section id="riwayat" className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-[0_10px_30px_rgba(18,50,59,0.05)]">
@@ -60,16 +57,16 @@ export default async function WargaPage() {
                     ) : (
                         <div className="mt-4 divide-y divide-[var(--line)]">
                             {complaints.map((complaint) => (
-                                <Link href={`/pengaduan/${complaint.ticketNumber}`} key={complaint.id} className="flex items-center justify-between gap-4 py-4 hover:bg-[var(--surface)]">
+                                <div key={complaint.id} className="flex items-center justify-between gap-4 py-4">
                                     <div className="min-w-0">
                                         <p className="text-xs font-bold uppercase tracking-wide text-[var(--brand)]">{complaint.ticketNumber}</p>
                                         <p className="mt-1 truncate font-semibold text-[var(--ink)]">{complaint.title}</p>
                                         <p className="mt-1 text-sm text-[var(--muted)]">{complaint.category} · {complaint.createdAt.toLocaleDateString("id-ID")}</p>
                                     </div>
                                     <div className="shrink-0">
-                                        <StatusBadge status={complaint.handlingStatus} />
+                                        <StatusBadge status={complaint.status} />
                                     </div>
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     )}
@@ -88,6 +85,10 @@ export default async function WargaPage() {
                         </div>
                     </div>
                 </section>
+
+                <p className="mt-6 text-center text-xs text-[var(--muted)]">
+                    Lihat forum pengaduan publik di <Link href="/pengaduan" className="font-semibold text-[var(--brand)]">/pengaduan</Link>.
+                </p>
             </div>
         </DashboardShell>
     );
