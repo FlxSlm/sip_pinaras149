@@ -15,7 +15,7 @@ export default async function AnnouncementsPage() {
             <div className="border-b border-[var(--line)] bg-white px-5 py-8 sm:px-8 sm:py-10">
                 <div className="mx-auto max-w-5xl">
                     <Link href="/" className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--leaf)] hover:text-[var(--leaf-dark)]">
-                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={28} height={28} className="size-7 rounded-md object-contain" />
+                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={28} height={28} className="logo-pentagon size-7 object-contain" />
                         SIP Pinaras
                     </Link>
                     <h1 className="mt-2 text-2xl font-bold text-[var(--ink)] sm:text-3xl">Pengumuman</h1>

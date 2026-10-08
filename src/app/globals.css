@@ -47,6 +47,7 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: none;
   height: 100%;
 }
@@ -60,6 +61,7 @@ body {
   line-height: 1.6;
   min-height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior-y: contain;
 }
 
@@ -101,6 +103,18 @@ a:active {
     url("/images/panorama-pinaras.png");
   background-size: cover;
   background-position: center 60%;
+}
+
+.dashboard-hero {
+  background-image:
+    linear-gradient(100deg, rgba(10, 54, 82, 0.94) 0%, rgba(13, 90, 142, 0.72) 48%, rgba(31, 138, 92, 0.45) 100%),
+    url("/images/panorama-pinaras.png");
+  background-size: cover;
+  background-position: center 48%;
+}
+
+.logo-pentagon {
+  clip-path: polygon(50% 0%, 96% 35%, 78% 100%, 22% 100%, 4% 35%);
 }
 
 @keyframes rise {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { publicComplaintSelect, toPublicComplaint } from "@/lib/complaint-projection";
+import { publicComplaintSelect, toPublicComplaint, PUBLIC_COMPLAINT_STATUSES } from "@/lib/complaint-projection";
 import { StatusBadge } from "@/components/status-badge";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function PublicComplaintDetail({ params }: { params: Promise<{ ticketNumber: string }> }) {
     const { ticketNumber } = await params;
     const complaint = await prisma.complaint.findFirst({
-        where: { ticketNumber, status: { in: ["SELESAI", "DITOLAK"] } },
+        where: { ticketNumber, status: { in: [...PUBLIC_COMPLAINT_STATUSES] } },
         select: publicComplaintSelect,
     });
 

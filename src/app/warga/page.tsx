@@ -51,10 +51,10 @@ export default async function WargaDashboardPage() {
         <DashboardShell role="warga" userName={userName}>
             <div className="mx-auto max-w-[1400px]">
                 {/* Welcome Header */}
-                <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-                    <p className="text-sm font-semibold text-[var(--brand)]">Selamat Datang,</p>
-                    <h1 className="mt-1 text-3xl font-extrabold text-[var(--ink)] sm:text-4xl">{userName} 👋</h1>
-                    <p className="mt-2 text-sm text-[var(--muted)]">Semoga hari Anda menyenangkan. Berikut ringkasan aktivitas di SIPP Pinaras.</p>
+                <div className="dashboard-hero mb-6 rounded-2xl p-6 text-white shadow-sm sm:p-8">
+                    <p className="text-sm font-semibold text-white/90">Selamat Datang,</p>
+                    <h1 className="mt-1 text-3xl font-extrabold text-white sm:text-4xl">{userName}</h1>
+                    <p className="mt-2 text-sm text-white/85">Semoga hari Anda menyenangkan. Berikut ringkasan aktivitas di SIPP.</p>
                 </div>
 
                 {/* Stat Cards */}
@@ -158,7 +158,7 @@ export default async function WargaDashboardPage() {
                         <div className="relative z-20 max-w-lg">
                             <span className="rounded-full bg-[var(--leaf)] px-3 py-1 text-[11px] font-bold text-white uppercase tracking-wider">Informasi</span>
                             <h2 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">Pelayanan Publik yang Lebih Baik</h2>
-                            <p className="mt-2 text-sm text-white/80 leading-relaxed">SIPP Pinaras hadir untuk mempermudah masyarakat dalam menyampaikan pengaduan, mendapatkan informasi, dan berpartisipasi dalam pembangunan kelurahan.</p>
+                            <p className="mt-2 text-sm text-white/80 leading-relaxed">SIPP hadir untuk mempermudah masyarakat dalam menyampaikan pengaduan, mendapatkan informasi, dan berpartisipasi dalam pembangunan kelurahan.</p>
                             <Link href="/warga/pengaduan/buat" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-[var(--brand)] transition hover:bg-white/90">
                                 Selengkapnya →
                             </Link>

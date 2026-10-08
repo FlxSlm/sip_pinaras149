@@ -96,8 +96,8 @@ export async function applyAdminAction(
             return { id: complaint.id };
         }
 
-        // REJECT
-        if (complaint.status !== "MENUNGGU" && complaint.status !== "DIPROSES") throw new Error("INVALID_TRANSITION");
+        // REJECT — hanya boleh dari MENUNGGU (DIPROSES hanya bisa -> SELESAI)
+        if (complaint.status !== "MENUNGGU") throw new Error("INVALID_TRANSITION");
         if (!input.note) throw new Error("NOTE_REQUIRED");
         await transaction.complaint.update({
             where: { id: complaint.id },

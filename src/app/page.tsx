@@ -50,14 +50,14 @@ export default async function Home() {
     const secondaryPotentials = content.potentials.slice(1);
 
     return (
-        <main className="min-h-screen bg-[var(--surface)]">
+        <main className="min-h-screen bg-[var(--surface)] pt-[64px]">
             {/* ═══ NAVBAR ═══ */}
-            <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--brand-deep)]/95 text-white backdrop-blur">
+            <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[var(--brand-deep)]/95 text-white backdrop-blur">
                 <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
                     <div className="flex items-center gap-2.5">
-                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={36} height={36} className="size-9 rounded-lg object-contain" />
+                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={36} height={36} className="logo-pentagon size-9 object-contain" />
                         <div>
-                            <p className="text-sm font-bold leading-tight">SIP Pinaras</p>
+                            <p className="text-sm font-bold leading-tight">SIPP</p>
                             <p className="text-[10px] leading-tight text-white/60">Kelurahan Pinaras · Tomohon Selatan</p>
                         </div>
                     </div>
@@ -272,7 +272,7 @@ export default async function Home() {
                 <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
                     <div className="grid gap-8 md:grid-cols-3">
                         <div>
-                            <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={40} height={40} className="mb-3 size-10 rounded-lg object-contain" />
+                            <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={40} height={40} className="logo-pentagon mb-3 size-10 object-contain" />
                             <p className="text-base font-bold">SIP Pinaras</p>
                             <p className="mt-1.5 text-[13px] leading-6 text-white/70">Sistem Informasi Peduli Pinaras — portal informasi dan pengaduan warga Kelurahan Pinaras.</p>
                         </div>

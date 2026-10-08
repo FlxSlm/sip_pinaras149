@@ -30,6 +30,7 @@ function MenuIcon({ d }: { d: ReactNode }) {
 
 function isActive(pathname: string, href: string, isRoot: boolean): boolean {
     if (isRoot) return pathname === href;
+    if (href === "/warga/pengaduan" && pathname.startsWith("/warga/pengaduan/buat")) return false;
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -75,12 +76,12 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
     const subLine = isAdmin ? (account?.username ?? "admin.pinaras") : (account?.email ?? "");
 
     const sidebar = (
-        <aside className="sidebar-bg flex h-full w-[250px] shrink-0 flex-col text-white">
+        <aside className="sidebar-bg flex h-screen w-[250px] shrink-0 flex-col text-white">
             {/* Logo */}
             <div className="flex items-center gap-3 px-5 py-5">
-                <Image src="/images/logo tomohon.png" alt="Logo" width={40} height={40} className="size-10 shrink-0 object-contain" />
+                <Image src="/images/logo tomohon.png" alt="Logo" width={40} height={40} className="logo-pentagon size-10 shrink-0 object-contain" />
                 <div>
-                    <p className="text-base font-bold leading-tight tracking-wide">SIPP PINARAS</p>
+                    <p className="text-base font-bold leading-tight tracking-wide">SIPP</p>
                     <p className="text-[11px] leading-tight text-white/60">Sistem Informasi Pengaduan Publik</p>
                     <p className="text-[10px] leading-tight text-white/50">Kelurahan Pinaras</p>
                 </div>
@@ -116,7 +117,7 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-white">{displayName}</p>
                     <p className="truncate text-[11px] text-white/55">{subLine}</p>
-                    {!isAdmin && <p className="mt-0.5 flex items-center gap-1 text-[10px] text-white/45"><Image src="/images/google-logo.jpg" alt="" width={12} height={12} className="size-3 rounded-full" />Login dengan Google</p>}
+                    {!isAdmin && <p className="mt-0.5 flex items-center gap-1 text-[10px] text-white/45"><Image src="/images/Google Logo.jpg" alt="Google" width={12} height={12} className="size-3 rounded-full" />Login dengan Google</p>}
                 </div>
                 <Link href={isAdmin ? "/admin/profil" : "/warga/profil"} aria-label="Profil" className="text-white/50 hover:text-white">
                     <svg viewBox="0 0 24 24" className="size-4" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6Z" /></svg>
@@ -128,7 +129,7 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
     return (
         <div className="flex min-h-screen bg-[var(--surface)]">
             {/* Desktop sidebar */}
-            <div className="sticky top-0 hidden h-screen lg:block">{sidebar}</div>
+            <div className="fixed inset-y-0 left-0 z-40 hidden w-[250px] lg:block">{sidebar}</div>
 
             {/* Mobile drawer */}
             {drawerOpen && (
@@ -139,7 +140,7 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
             )}
 
             {/* Main content */}
-            <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+            <div className="flex min-w-0 flex-1 flex-col overflow-x-clip lg:ml-[250px]">
                 {/* Top header */}
                 <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-[var(--line)] bg-white px-4 lg:px-8">
                     <div className="flex items-center gap-3">
@@ -147,8 +148,8 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
                             <svg viewBox="0 0 24 24" className="size-5" fill="currentColor"><path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z" /></svg>
                         </button>
                         <Link href={basePath} className="flex items-center gap-2 lg:hidden">
-                            <Image src="/images/logo tomohon.png" alt="Logo" width={28} height={28} className="size-7 rounded object-contain" />
-                            <span className="text-sm font-bold text-[var(--ink)]">SIPP PINARAS</span>
+                            <Image src="/images/logo tomohon.png" alt="Logo" width={28} height={28} className="logo-pentagon size-7 object-contain" />
+                            <span className="text-sm font-bold text-[var(--ink)]">SIPP</span>
                         </Link>
                     </div>
                     <div className="flex items-center gap-4">
@@ -179,10 +180,10 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
                 <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-white px-4 py-3 text-[11px] text-[var(--muted)] lg:px-8">
                     <p className="flex items-center gap-1.5">
                         <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z" /></svg>
-                        {isAdmin ? "SIPP PINARAS · Kelurahan Pinaras, Kecamatan Tomohon Selatan, Kota Tomohon" : "Kelurahan Pinaras, Kecamatan Tomohon Selatan, Kota Tomohon"}
+                        {isAdmin ? "SIPP · Kelurahan Pinaras, Kecamatan Tomohon Selatan, Kota Tomohon" : "Kelurahan Pinaras, Kecamatan Tomohon Selatan, Kota Tomohon"}
                     </p>
                     <p className="italic">
-                        {isAdmin ? "Bersama Membangun Pinaras yang Lebih Baik 🌿" : "SIPP PINARAS — Bersama Membangun Pinaras yang Lebih Baik 🌿"}
+                        {isAdmin ? "Bersama Membangun Pinaras yang Lebih Baik 🌿" : "SIPP — Bersama Membangun Pinaras yang Lebih Baik 🌿"}
                     </p>
                 </footer>
             </div>

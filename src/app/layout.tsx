@@ -4,7 +4,7 @@ import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SIP Pinaras",
+  title: "SIPP",
   description: "Sistem Informasi Peduli Pinaras",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/images/logo tomohon.png", apple: "/images/logo tomohon.png" },

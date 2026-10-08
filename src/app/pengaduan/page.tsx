@@ -2,13 +2,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { PublicComplaintList } from "@/components/public-complaint-list";
 import { prisma } from "@/lib/prisma";
-import { publicComplaintSelect, toPublicComplaint } from "@/lib/complaint-projection";
+import { publicComplaintSelect, toPublicComplaint, PUBLIC_COMPLAINT_STATUSES } from "@/lib/complaint-projection";
 
 export const dynamic = "force-dynamic";
 
 export default async function PublicComplaintsPage() {
     const complaints = await prisma.complaint.findMany({
-        where: { status: { in: ["SELESAI", "DITOLAK"] } },
+        where: { status: { in: [...PUBLIC_COMPLAINT_STATUSES] } },
         orderBy: [{ completedAt: "desc" }, { rejectedAt: "desc" }, { createdAt: "desc" }],
         select: publicComplaintSelect,
     });
@@ -23,7 +23,7 @@ export default async function PublicComplaintsPage() {
             <div className="nature-hero px-5 py-10 text-white sm:px-8 sm:py-14">
                 <div className="mx-auto max-w-5xl">
                     <Link href="/" className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70 hover:text-white">
-                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={28} height={28} className="size-7 rounded-md object-contain" />
+                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={28} height={28} className="logo-pentagon size-7 object-contain" />
                         SIP Pinaras
                     </Link>
                     <h1 className="mt-3 text-3xl font-bold leading-tight sm:text-4xl">Forum Pengaduan Publik</h1>

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canAccessComplaint } from "@/lib/access";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ ticketNumber: string; evidenceId: string }> }) {
     const session = await getServerSession(authOptions);
@@ -14,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tic
         select: { reporterUserId: true, evidences: { where: { id: evidenceId }, select: { path: true, mimeType: true } } },
     });
     if (!complaint || complaint.evidences.length === 0) return new NextResponse("Bukti tidak ditemukan.", { status: 404 });
-    const allowed = session.user.role === "ADMIN_KELURAHAN" || (session.user.role === "WARGA" && complaint.reporterUserId === session.user.id);
+    const allowed = canAccessComplaint({ id: session.user.id, role: session.user.role }, complaint);
     if (!allowed) return new NextResponse("Akses ditolak.", { status: 403 });
     try {
         const evidence = complaint.evidences[0];

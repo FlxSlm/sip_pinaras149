@@ -47,10 +47,10 @@ export default function LoginPage() {
         <main className="nature-hero relative flex min-h-screen flex-col justify-center px-6 py-12 lg:px-20 lg:py-0">
             {/* Header / Brand */}
             <div className="absolute left-6 top-6 flex items-center gap-3 lg:left-20 lg:top-10">
-                <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={48} height={48} className="size-12 object-contain" />
+                <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={48} height={48} className="logo-pentagon size-12 object-contain" />
                 <div className="text-white">
-                    <p className="text-xl font-bold leading-tight tracking-wide">SIPP PINARAS</p>
-                    <p className="text-sm font-medium leading-tight opacity-80">Sistem Informasi Peduli Pinaras</p>
+                    <p className="text-xl font-bold leading-tight tracking-wide">SIPP</p>
+                    <p className="text-sm font-medium leading-tight text-white">Sistem Informasi Peduli Pinaras</p>
                 </div>
             </div>
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
                     <div className="flex w-full flex-col justify-center lg:w-[55%]">
                         <p className="text-xl text-white sm:text-2xl">Selamat Datang di</p>
                         <h1 className="mt-1 text-4xl font-extrabold leading-tight text-white sm:text-6xl lg:text-[4rem]">
-                            SIPP <span className="text-[var(--leaf)]">Kelurahan Pinaras</span>
+                            SIPP <span className="text-white">Kelurahan Pinaras</span>
                         </h1>
                         <p className="mt-6 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
                             Sistem Informasi Peduli Pinaras, hadir untuk memberikan informasi, layanan pengaduan, dan berbagai potensi Kelurahan Pinaras secara transparan, cepat dan mudah diakses.
@@ -103,40 +103,40 @@ export default function LoginPage() {
 
                     {/* Right Login Card */}
                     <div className="flex w-full flex-col justify-center lg:w-[45%] lg:max-w-[480px]">
-                        <div className="rounded-[32px] bg-white p-8 shadow-2xl sm:p-10">
-                            <h2 className="text-3xl font-extrabold text-[var(--brand-deep)]">Halo!</h2>
+                        <div className="rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+                            <h2 className="text-2xl font-extrabold text-[var(--brand-deep)]">Halo!</h2>
                             <p className="mt-1 text-lg font-medium text-[var(--brand-deep)]">Silakan masuk ke akun Anda</p>
 
                             <button
                                 type="button"
                                 disabled={!providers?.google}
                                 onClick={() => signIn("google", { callbackUrl: getCallbackUrl() })}
-                                className="mt-8 flex w-full items-center justify-between rounded-full border border-[var(--line)] bg-white px-6 py-4 transition hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
+                                className="mt-6 flex w-full items-center justify-between rounded-full border border-[var(--line)] bg-white px-5 py-3 transition hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <span className="flex items-center gap-4 text-sm font-bold text-[var(--ink)]">
-                                    <Image src="/images/google-logo.jpg" alt="" width={24} height={24} className="size-6 rounded-full object-contain" />
+                                    <Image src="/images/Google Logo.jpg" alt="Google" width={24} height={24} className="size-6 rounded-full object-contain" />
                                     {providers === null ? "Memuat..." : providers.google ? "Lanjutkan dengan Google" : "Google belum dikonfigurasi"}
                                 </span>
                                 <span className="text-[var(--muted)]">→</span>
                             </button>
 
-                            <p className="mt-4 text-center text-[12px] leading-relaxed text-[var(--muted)]">
+                            <p className="mt-3 text-center text-[12px] leading-relaxed text-[var(--muted)]">
                                 Untuk warga, gunakan akun Google Anda<br />untuk mengakses layanan pengaduan.
                             </p>
 
-                            <div className="my-8 flex items-center gap-4 text-[12px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                            <div className="my-5 flex items-center gap-4 text-[12px] font-semibold uppercase tracking-wider text-[var(--muted)]">
                                 <span className="h-px flex-1 bg-[var(--line)]" />
                                 atau
                                 <span className="h-px flex-1 bg-[var(--line)]" />
                             </div>
 
-                            <form className="space-y-5" onSubmit={handleStaffLogin}>
+                            <form className="space-y-3" onSubmit={handleStaffLogin}>
                                 <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]">
                                     <svg viewBox="0 0 24 24" className="size-5 text-[var(--leaf)]" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8Z"/></svg>
                                     Login Admin Kelurahan
                                 </h3>
 
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     <div className="relative">
                                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                             <svg viewBox="0 0 24 24" className="size-5 text-[var(--muted)]" fill="currentColor"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z"/></svg>
@@ -146,7 +146,7 @@ export default function LoginPage() {
                                             onChange={(event) => setUsername(event.target.value)}
                                             autoComplete="username"
                                             placeholder="Username"
-                                            className="w-full rounded-xl border border-[var(--line)] bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-[var(--ink)] outline-none transition focus:border-[var(--leaf)] focus:ring-1 focus:ring-[var(--leaf)]"
+                                            className="w-full rounded-xl border border-[var(--line)] bg-white py-3 pl-12 pr-4 text-sm font-semibold text-[var(--ink)] outline-none transition focus:border-[var(--leaf)] focus:ring-1 focus:ring-[var(--leaf)]"
                                             required
                                         />
                                     </div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                                             onChange={(event) => setPassword(event.target.value)}
                                             autoComplete="current-password"
                                             placeholder="Password"
-                                            className="w-full rounded-xl border border-[var(--line)] bg-white py-3.5 pl-12 pr-12 text-sm font-semibold text-[var(--ink)] outline-none transition focus:border-[var(--leaf)] focus:ring-1 focus:ring-[var(--leaf)]"
+                                            className="w-full rounded-xl border border-[var(--line)] bg-white py-3 pl-12 pr-12 text-sm font-semibold text-[var(--ink)] outline-none transition focus:border-[var(--leaf)] focus:ring-1 focus:ring-[var(--leaf)]"
                                             required
                                         />
                                     </div>
@@ -169,16 +169,13 @@ export default function LoginPage() {
                                 <button
                                     type="submit"
                                     disabled={pending}
-                                    className="w-full rounded-full bg-[var(--leaf-dark)] px-6 py-4 text-sm font-bold text-white transition hover:bg-[var(--brand-deep)] disabled:opacity-60"
+                                    className="w-full rounded-full bg-[var(--leaf-dark)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[var(--brand-deep)] disabled:opacity-60"
                                 >
                                     {pending ? "Memeriksa..." : "Masuk →"}
                                 </button>
-                                <div className="text-center">
-                                    <button type="button" className="text-[12px] font-semibold text-[var(--leaf)] hover:underline">Lupa password?</button>
-                                </div>
                             </form>
 
-                            <div className="mt-10 flex items-start gap-3 rounded-2xl bg-[var(--surface)] p-4 text-[11px] text-[var(--muted)]">
+                            <div className="mt-5 flex items-start gap-3 rounded-2xl bg-[var(--surface)] p-3 text-[11px] text-[var(--muted)]">
                                 <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></svg>
                                 <p>Kelurahan Pinaras<br />Kecamatan Tomohon Selatan, Kota Tomohon</p>
                             </div>
@@ -190,7 +187,7 @@ export default function LoginPage() {
             {/* Absolute Footer */}
             <div className="absolute bottom-6 left-6 right-6 flex hidden items-center justify-between text-[11px] text-white/70 lg:flex lg:bottom-8 lg:left-20 lg:right-20">
                 <p className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="size-4" fill="currentColor"><path d="M12 2L2 22h20L12 2Zm0 3.82L18.44 19H5.56L12 5.82ZM11 10h2v5h-2v-5Zm0 6h2v2h-2v-2Z"/></svg> Kelurahan Pinaras | Kecamatan Tomohon Selatan | Kota Tomohon</p>
-                <p>SIPP PINARAS © {new Date().getFullYear()}. Semua Hak Dilindungi.</p>
+                <p>SIPP © {new Date().getFullYear()}. Semua Hak Dilindungi.</p>
             </div>
         </main>
     );

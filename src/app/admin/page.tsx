@@ -57,10 +57,10 @@ export default async function AdminDashboardPage() {
         <DashboardShell role="admin" userName={userName}>
             <div className="mx-auto max-w-[1400px]">
                 {/* Welcome Header */}
-                <div className="mb-6">
-                    <p className="text-sm font-semibold text-[var(--brand)]">Selamat Datang,</p>
-                    <h1 className="mt-1 text-3xl font-extrabold text-[var(--ink)] sm:text-4xl">{userName}</h1>
-                    <p className="mt-2 text-sm text-[var(--muted)]">Kelola pengaduan, pengumuman dan konten landing page untuk pelayanan publik yang lebih baik.</p>
+                <div className="dashboard-hero mb-6 rounded-2xl p-6 text-white shadow-sm sm:p-8">
+                    <p className="text-sm font-semibold text-white/90">Selamat Datang,</p>
+                    <h1 className="mt-1 text-3xl font-extrabold text-white sm:text-4xl">{userName}</h1>
+                    <p className="mt-2 text-sm text-white/85">Kelola pengaduan, pengumuman dan konten landing page untuk pelayanan publik yang lebih baik.</p>
                 </div>
 
                 {/* Stat Cards */}

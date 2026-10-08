@@ -1,3 +1,9 @@
+export const PUBLIC_COMPLAINT_STATUSES = ["SELESAI", "DITOLAK"] as const;
+
+export function isPublicComplaintStatus(status: string): boolean {
+    return (PUBLIC_COMPLAINT_STATUSES as readonly string[]).includes(status);
+}
+
 export function redactPII(text: string): string {
     return text
         .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email disembunyikan]")
