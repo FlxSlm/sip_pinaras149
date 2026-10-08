@@ -73,13 +73,13 @@ async function main() {
         update: {
             name: "Admin Kelurahan Pinaras",
             role: UserRole.ADMIN_KELURAHAN,
-            passwordHash: hashPassword(process.env.ADMIN_SEED_PASSWORD ?? "ganti-saya-2026"),
+            passwordHash: hashPassword(process.env.ADMIN_SEED_PASSWORD ?? "admin123"),
         },
         create: {
             username: "admin.pinaras",
             name: "Admin Kelurahan Pinaras",
             role: UserRole.ADMIN_KELURAHAN,
-            passwordHash: hashPassword(process.env.ADMIN_SEED_PASSWORD ?? "ganti-saya-2026"),
+            passwordHash: hashPassword(process.env.ADMIN_SEED_PASSWORD ?? "admin"),
         },
     });
 

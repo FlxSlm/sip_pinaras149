@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "SIP Pinaras",
   description: "Sistem Informasi Peduli Pinaras",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon-192.svg", apple: "/icon-192.svg" },
+  icons: { icon: "/images/logo tomohon.png", apple: "/images/logo tomohon.png" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

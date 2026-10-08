@@ -1,9 +1,9 @@
-import { scryptSync, timingSafeEqual } from "node:crypto";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
+import { verifyPassword } from "@/lib/password";
 
 const oauthProviders = [
     process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
@@ -12,21 +12,6 @@ const oauthProviders = [
 ].filter((provider): provider is NonNullable<typeof provider> => provider !== null);
 
 const adapter = PrismaAdapter(prisma as unknown as Parameters<typeof PrismaAdapter>[0]);
-
-function verifyPassword(password: string, encodedHash: string): boolean {
-    const [algorithm, salt, encodedKey] = encodedHash.split(":");
-    if (algorithm !== "scrypt" || !salt || !encodedKey) {
-        return false;
-    }
-
-    try {
-        const storedKey = Buffer.from(encodedKey, "hex");
-        const derivedKey = scryptSync(password, salt, storedKey.length);
-        return storedKey.length === derivedKey.length && timingSafeEqual(storedKey, derivedKey);
-    } catch {
-        return false;
-    }
-}
 
 export const authOptions: NextAuthOptions = {
     adapter,

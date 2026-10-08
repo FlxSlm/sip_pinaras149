@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PublicComplaintList } from "@/components/public-complaint-list";
 import { prisma } from "@/lib/prisma";
 import { publicComplaintSelect, toPublicComplaint } from "@/lib/complaint-projection";
@@ -17,32 +18,41 @@ export default async function PublicComplaintsPage() {
     const ditolak = complaints.filter((complaint) => complaint.status === "DITOLAK").length;
 
     return (
-        <main className="min-h-screen bg-[var(--surface)] px-5 py-10 sm:px-8 sm:py-14">
-            <div className="mx-auto max-w-5xl">
-                <Link href="/" className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--leaf)]">SIP Pinaras</Link>
-                <h1 className="mt-4 text-4xl font-extrabold leading-tight text-[var(--ink)] sm:text-5xl">Forum pengaduan publik</h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                    Hanya pengaduan yang telah <strong>selesai</strong> atau <strong>ditolak</strong> yang ditampilkan. Identitas pelapor, kontak, dan bukti privat tidak pernah dipublikasikan.
-                </p>
+        <main className="min-h-screen bg-[var(--surface)]">
+            {/* Header banner */}
+            <div className="nature-hero px-5 py-10 text-white sm:px-8 sm:py-14">
+                <div className="mx-auto max-w-5xl">
+                    <Link href="/" className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70 hover:text-white">
+                        <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={28} height={28} className="size-7 rounded-md object-contain" />
+                        SIP Pinaras
+                    </Link>
+                    <h1 className="mt-3 text-3xl font-bold leading-tight sm:text-4xl">Forum Pengaduan Publik</h1>
+                    <p className="mt-2 max-w-2xl text-[13px] leading-6 text-white/75">
+                        Hanya pengaduan yang telah <strong className="text-white">selesai</strong> atau <strong className="text-white">ditolak</strong> yang ditampilkan. Identitas pelapor, kontak, dan bukti privat tidak pernah dipublikasikan.
+                    </p>
 
-                <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-[var(--brand-deep)] p-5 text-white">
-                        <p className="text-3xl font-extrabold">{total}</p>
-                        <p className="mt-1 text-sm text-white/70">Total publik</p>
-                    </div>
-                    <div className="rounded-2xl bg-[var(--soft-accent)] p-5 text-[var(--ink)]">
-                        <p className="text-3xl font-extrabold">{selesai}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">Selesai</p>
-                    </div>
-                    <div className="rounded-2xl bg-[#fbe9e7] p-5 text-[var(--ink)]">
-                        <p className="text-3xl font-extrabold">{ditolak}</p>
-                        <p className="mt-1 text-sm text-[var(--muted)]">Ditolak</p>
+                    {/* Compact stat strip */}
+                    <div className="mt-6 inline-flex flex-wrap gap-4 rounded-lg bg-white/10 px-5 py-3 backdrop-blur">
+                        <div>
+                            <p className="text-xl font-bold">{total}</p>
+                            <p className="text-[11px] text-white/60">Total publik</p>
+                        </div>
+                        <div className="w-px bg-white/20" />
+                        <div>
+                            <p className="text-xl font-bold">{selesai}</p>
+                            <p className="text-[11px] text-white/60">Selesai</p>
+                        </div>
+                        <div className="w-px bg-white/20" />
+                        <div>
+                            <p className="text-xl font-bold">{ditolak}</p>
+                            <p className="text-[11px] text-white/60">Ditolak</p>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="mt-8">
-                    <PublicComplaintList complaints={complaints.map((complaint) => toPublicComplaint(complaint))} />
-                </div>
+            <div className="mx-auto max-w-5xl px-5 py-8 sm:px-8">
+                <PublicComplaintList complaints={complaints.map((complaint) => toPublicComplaint(complaint))} />
             </div>
         </main>
     );

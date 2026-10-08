@@ -15,9 +15,19 @@ export async function GET() {
     return NextResponse.json({ notifications, unreadCount: notifications.filter((item) => !item.readAt).length });
 }
 
-export async function PATCH() {
+export async function PATCH(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user.id) return NextResponse.json({ message: "Tidak terautentikasi." }, { status: 401 });
-    await prisma.notification.updateMany({ where: { recipientId: session.user.id, readAt: null }, data: { readAt: new Date() } });
+    let body: { id?: string } = {};
+    try {
+        body = await request.json();
+    } catch {
+        // no body = mark all read
+    }
+    if (body.id) {
+        await prisma.notification.updateMany({ where: { id: body.id, recipientId: session.user.id }, data: { readAt: new Date() } });
+    } else {
+        await prisma.notification.updateMany({ where: { recipientId: session.user.id, readAt: null }, data: { readAt: new Date() } });
+    }
     return NextResponse.json({ message: "Notifikasi ditandai sudah dibaca." });
 }
