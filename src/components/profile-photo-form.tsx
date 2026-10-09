@@ -9,16 +9,21 @@ export function ProfilePhotoForm({ imageUrl, name }: { imageUrl: string | null; 
     const [pending, setPending] = useState(false);
     const [confirming, setConfirming] = useState(false);
 
-    async function upload(file: File) {
+    async function uploadFile(file: File) {
         setPending(true);
         setMessage("");
-        const form = new FormData();
-        form.append("photo", file);
-        const response = await fetch("/api/profile/photo", { method: "POST", body: form });
-        const result = (await response.json()) as { message?: string };
-        setMessage(result.message ?? (response.ok ? "Foto profil diperbarui." : "Gagal mengunggah foto."));
-        if (response.ok) window.location.reload();
-        setPending(false);
+        try {
+            const { upload } = await import("@vercel/blob/client");
+            await upload(file.name, file, {
+                access: "private",
+                handleUploadUrl: "/api/profile/photo",
+            });
+            setMessage("Foto profil diperbarui.");
+            window.location.reload();
+        } catch {
+            setMessage("Gagal mengunggah foto.");
+            setPending(false);
+        }
     }
 
     async function removePhoto() {
@@ -45,7 +50,7 @@ export function ProfilePhotoForm({ imageUrl, name }: { imageUrl: string | null; 
                 <div className="flex flex-wrap gap-2">
                     <label className="cursor-pointer rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white">
                         {pending ? "Mengunggah..." : "Ganti foto profil"}
-                        <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload(file); }} />
+                        <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file); }} />
                     </label>
                     {imageUrl && (
                         <button type="button" onClick={() => setConfirming(true)} disabled={pending} className="rounded-lg border border-[var(--danger)] px-4 py-2 text-sm font-bold text-[var(--danger)] disabled:opacity-60">

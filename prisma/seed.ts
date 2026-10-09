@@ -68,18 +68,23 @@ const siteContent = {
 };
 
 async function main() {
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+    if (!adminPassword || adminPassword.length < 8) {
+        throw new Error("Peringatan Keamanan: ADMIN_SEED_PASSWORD harus diatur di environment variables dan minimal terdiri dari 8 karakter.");
+    }
+
     const admin = await prisma.user.upsert({
         where: { username: "admin.pinaras" },
         update: {
             name: "Admin Kelurahan Pinaras",
             role: UserRole.ADMIN_KELURAHAN,
-            passwordHash: hashPassword(process.env.ADMIN_SEED_PASSWORD ?? "admin123"),
+            passwordHash: hashPassword(adminPassword),
         },
         create: {
             username: "admin.pinaras",
             name: "Admin Kelurahan Pinaras",
             role: UserRole.ADMIN_KELURAHAN,
-            passwordHash: hashPassword(process.env.ADMIN_SEED_PASSWORD ?? "admin"),
+            passwordHash: hashPassword(adminPassword),
         },
     });
 

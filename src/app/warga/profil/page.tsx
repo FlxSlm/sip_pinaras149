@@ -12,14 +12,14 @@ export default async function WargaProfilePage() {
     if (!session) redirect("/login");
     if (session.user.role !== "WARGA") redirect("/admin");
 
-    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, email: true, image: true } });
+    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, email: true, image: true, customImage: true } });
 
     return (
         <DashboardShell role="warga" userName={user?.name ?? session.user.email ?? "Warga"}>
             <div className="mx-auto max-w-2xl">
                 <h1 className="text-2xl font-extrabold text-[var(--ink)]">Profil</h1>
                 <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
-                    <ProfilePhotoForm imageUrl={user?.image ?? null} name={user?.name ?? "W"} />
+                    <ProfilePhotoForm imageUrl={user?.customImage ? "/api/profile/photo" : (user?.image ?? null)} name={user?.name ?? "W"} />
                     <div className="mt-6 grid gap-4 border-t border-[var(--line)] pt-6 sm:grid-cols-2">
                         <div>
                             <p className="text-sm font-semibold text-[var(--muted)]">Nama</p>

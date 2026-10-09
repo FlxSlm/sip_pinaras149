@@ -13,7 +13,7 @@ export default async function AdminProfilePage() {
     if (!session) redirect("/login");
     if (session.user.role !== "ADMIN_KELURAHAN") redirect("/warga");
 
-    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true, name: true, email: true, image: true } });
+    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true, name: true, email: true, image: true, customImage: true } });
 
     return (
         <DashboardShell role="admin" userName={user?.name ?? "Admin Kelurahan"}>
@@ -21,7 +21,7 @@ export default async function AdminProfilePage() {
                 <h1 className="text-2xl font-extrabold text-[var(--ink)]">Profil Admin</h1>
 
                 <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
-                    <ProfilePhotoForm imageUrl={user?.image ?? null} name={user?.name ?? "A"} />
+                    <ProfilePhotoForm imageUrl={user?.customImage ? "/api/profile/photo" : (user?.image ?? null)} name={user?.name ?? "A"} />
                     <div className="mt-6 grid gap-4 border-t border-[var(--line)] pt-6 sm:grid-cols-2">
                         <div>
                             <p className="text-sm font-semibold text-[var(--muted)]">Username</p>
