@@ -45,6 +45,7 @@ export default async function WargaDashboardPage() {
         { label: "Menunggu", value: stats.menunggu, color: "#c08a1a" },
         { label: "Diproses", value: stats.diproses, color: "#0d5a8e" },
         { label: "Selesai", value: stats.selesai, color: "#1f8a5c" },
+        { label: "Ditolak", value: stats.ditolak, color: "#c8323e" },
     ];
 
     return (
@@ -58,7 +59,7 @@ export default async function WargaDashboardPage() {
                 </div>
 
                 {/* Stat Cards */}
-                <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
                     {statCards.map((item) => (
                         <div key={item.label} className="flex items-center gap-5 rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm">
                             <div className={`flex size-14 shrink-0 items-center justify-center rounded-2xl ${item.bg} ${item.color}`}>
@@ -73,11 +74,11 @@ export default async function WargaDashboardPage() {
                 </div>
 
                 {/* 3-Column Grid */}
-                <div className="mb-6 grid gap-6 lg:grid-cols-3">
+                <div className="dashboard-warga-grid mb-6 grid gap-5">
                     {/* Donut Chart */}
                     <div className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
                         <h2 className="mb-6 text-lg font-extrabold text-[var(--ink)]">Status Pengaduan</h2>
-                        <DonutChart data={chartData} />
+                        <DonutChart data={chartData} title="Status pengaduan Anda" />
                     </div>
 
                     {/* Recent Complaints */}

@@ -3,19 +3,23 @@
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icon";
 
 export function LogoutButton() {
     const [confirming, setConfirming] = useState(false);
 
     return (
         <>
-            <button
-                type="button"
+            <Button
+                variant="secondary"
+                aria-label="Keluar dari akun"
                 onClick={() => setConfirming(true)}
-                className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-bold text-[var(--ink)]"
+                className="size-11 px-0 sm:w-auto sm:px-4"
             >
-                Keluar
-            </button>
+                <Icon name="logout" />
+                <span className="hidden sm:inline">Keluar</span>
+            </Button>
             {confirming && (
                 <ConfirmDialog
                     title="Keluar dari akun?"

@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
+import { getAuthRedirectUrl, isUserRole } from "@/lib/authorization";
 
 const oauthProviders = [
     process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
@@ -37,7 +38,17 @@ export const authOptions: NextAuthOptions = {
                     return null;
                 }
 
-                const user = await prisma.user.findUnique({ where: { username } });
+                let user;
+                try {
+                    user = await prisma.user.findUnique({
+                        where: { username },
+                        select: { id: true, name: true, email: true, role: true, passwordHash: true },
+                    });
+                } catch {
+                    // NextAuth serializes thrown authorize messages into an error URL.
+                    // Never send a raw database error to the login page.
+                    throw new Error("Configuration");
+                }
                 if (
                     !user ||
                     user.role !== "ADMIN_KELURAHAN" ||
@@ -59,22 +70,31 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ user, account }) {
             if (account?.type === "oauth") {
-                return user.role === "WARGA" || !user.role;
+                return account.provider === "google" && (user.role === "WARGA" || !user.role);
             }
-            return true;
+            return account?.type === "credentials" && user.role === "ADMIN_KELURAHAN";
+        },
+        async redirect({ url, baseUrl }) {
+            return getAuthRedirectUrl(url, baseUrl);
         },
         async jwt({ token, user }) {
             if (user) {
-                token.userId = user.id;
-                token.role = user.role;
+                // Use the persisted SIPP user ID and role, never a provider ID or
+                // an arbitrary WARGA default for incomplete authentication data.
+                const identity = isUserRole(user.role) ? user : await prisma.user.findUnique({
+                    where: { id: user.id }, select: { id: true, role: true },
+                });
+                if (!identity?.id || !isUserRole(identity.role)) throw new Error("SessionRequired");
+                token.userId = identity.id;
+                token.role = identity.role;
             }
+            if (!token.userId || !isUserRole(token.role)) throw new Error("SessionRequired");
             return token;
         },
         async session({ session, token }) {
-            if (session.user && token.userId && token.role) {
-                session.user.id = token.userId;
-                session.user.role = token.role;
-            }
+            if (!session.user || !token.userId || !isUserRole(token.role)) throw new Error("SessionRequired");
+            session.user.id = token.userId;
+            session.user.role = token.role;
             return session;
         },
     },

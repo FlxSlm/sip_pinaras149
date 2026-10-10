@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type SiteSection = "hero" | "profil" | "lokasi" | "kontak";
 type ListSection = "statistics" | "potentials" | "facilities";
@@ -50,6 +51,7 @@ export function CmsEditor() {
     const [active, setActive] = useState<SiteSection | ListSection>("hero");
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
+    const [confirmation, setConfirmation] = useState<{ title: string; run: () => void } | null>(null);
 
     useEffect(() => {
         void fetch("/api/admin/cms")
@@ -171,8 +173,8 @@ export function CmsEditor() {
                         inputClass={inputClass}
                         onUpdate={(index, patch) => updateListItem(active, index, patch)}
                         onAdd={() => addListItem(active)}
-                        onRemove={(index) => removeListItem(active, index)}
-                        onSave={() => saveList(active)}
+                        onRemove={(index) => setConfirmation({ title: "Hapus baris konten ini?", run: () => removeListItem(active, index) })}
+                        onSave={() => setConfirmation({ title: "Simpan perubahan konten publik?", run: () => void saveList(active) })}
                         pending={pending}
                     />
                 ) : (
@@ -189,12 +191,13 @@ export function CmsEditor() {
                                 </label>
                             ))}
                         </div>
-                        <button type="button" disabled={pending} onClick={() => saveSingle(active as SiteSection)} className="mt-6 rounded-lg bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
+                        <button type="button" disabled={pending} onClick={() => setConfirmation({ title: "Simpan perubahan konten publik?", run: () => void saveSingle(active as SiteSection) })} className="mt-6 rounded-lg bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
                             {pending ? "Menyimpan..." : "Simpan"}
                         </button>
                     </div>
                 )}
             </div>
+            {confirmation && <ConfirmDialog title={confirmation.title} description="Pastikan isi dan sumber data sudah benar. Perubahan yang disimpan akan tampil pada portal publik." confirmLabel="Ya, lanjutkan" onCancel={() => setConfirmation(null)} onConfirm={() => { const target = confirmation; setConfirmation(null); target.run(); }} />}
         </div>
     );
 }

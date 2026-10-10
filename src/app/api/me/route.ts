@@ -14,7 +14,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ message: "Tidak ditemukan." }, { status: 404 });
 
     return NextResponse.json({
-        ...user,
+        id: user.id, name: user.name, email: user.email, username: user.username, role: user.role,
         image: user.customImage ? "/api/profile/photo" : user.image,
-    });
+    }, { headers: { "Cache-Control": "private, no-store" } });
 }

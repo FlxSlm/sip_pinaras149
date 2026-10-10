@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
     const userId = session.user.id;
     const userName = session.user.name ?? session.user.email ?? "Admin Kelurahan";
 
-    const [stats, recentComplaints, recentNotifications, perluPerhatian] = await Promise.all([
+    const [stats, recentComplaints, recentNotifications, priorities] = await Promise.all([
         getComplaintStats(prisma),
         prisma.complaint.findMany({
             orderBy: { createdAt: "desc" },
@@ -31,7 +31,7 @@ export default async function AdminDashboardPage() {
             take: 5,
             select: { id: true, title: true, message: true, readAt: true, createdAt: true, complaint: { select: { ticketNumber: true } }, announcementId: true },
         }),
-        prisma.complaint.count({ where: { priority: "PERLU_PERHATIAN", status: { in: ["MENUNGGU", "DIPROSES"] } } }),
+        prisma.complaint.groupBy({ by: ["priority"], _count: { _all: true } }),
     ]);
 
     const statCards = [
@@ -45,12 +45,13 @@ export default async function AdminDashboardPage() {
         { label: "Menunggu", value: stats.menunggu, color: "#c08a1a" },
         { label: "Diproses", value: stats.diproses, color: "#0d5a8e" },
         { label: "Selesai", value: stats.selesai, color: "#1f8a5c" },
+        { label: "Ditolak", value: stats.ditolak, color: "#c8323e" },
     ];
 
     const chartDataTindaklanjut = [
-        { label: "Menunggu", value: stats.menunggu, color: "#c08a1a" },
-        { label: "Diproses", value: stats.diproses, color: "#0d5a8e" },
-        { label: "Perlu Perhatian", value: perluPerhatian, color: "#c0392b" },
+        { label: "Normal", value: priorities.find((p) => p.priority === "NORMAL")?._count._all ?? 0, color: "#087ac1" },
+        { label: "Perlu perhatian", value: priorities.find((p) => p.priority === "PERLU_PERHATIAN")?._count._all ?? 0, color: "#c8323e" },
+        { label: "Belum ditentukan", value: priorities.find((p) => p.priority === null)?._count._all ?? 0, color: "#587094" },
     ];
 
     return (
@@ -64,7 +65,7 @@ export default async function AdminDashboardPage() {
                 </div>
 
                 {/* Stat Cards */}
-                <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
                     {statCards.map((item) => (
                         <div key={item.label} className="flex flex-col rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
                             <div className="flex items-start justify-between gap-3">
@@ -84,11 +85,11 @@ export default async function AdminDashboardPage() {
                 <div className="mb-6 grid gap-6 lg:grid-cols-2">
                     <div className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
                         <h2 className="mb-6 text-lg font-extrabold text-[var(--brand-deep)]">Ringkasan Pengaduan</h2>
-                        <DonutChart data={chartDataRingkasan} />
+                        <DonutChart data={chartDataRingkasan} title="Status pengaduan" />
                     </div>
                     <div className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
-                        <h2 className="mb-6 text-lg font-extrabold text-[var(--brand-deep)]">Pengaduan Yang Perlu Ditindaklanjuti</h2>
-                        <DonutChart data={chartDataTindaklanjut} />
+                        <h2 className="mb-4 text-lg font-semibold text-[var(--brand-deep)]">Prioritas Pengaduan</h2>
+                        <DonutChart data={chartDataTindaklanjut} title="Prioritas pengaduan" />
                     </div>
                 </div>
 

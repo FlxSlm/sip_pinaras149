@@ -1,207 +1,95 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Dialog } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icon";
 
-type Announcement = {
-    id: string;
-    title: string;
-    content: string;
-    mediaType: string;
-    mediaRef: string | null;
-    isPinned: boolean;
-    status: string;
-    publishedAt: string | null;
-    createdAt: string;
-};
-
-const statusLabel: Record<string, string> = { DRAFT: "Draft", PUBLISHED: "Terbit", ARCHIVED: "Arsip" };
-const statusTone: Record<string, string> = {
-    DRAFT: "bg-[var(--surface)] text-[var(--muted)]",
-    PUBLISHED: "bg-[var(--soft-accent)] text-[var(--leaf-dark)]",
-    ARCHIVED: "bg-[#fbe9e7] text-[var(--danger)]",
-};
-
-type Filter = "ALL" | "PUBLISHED" | "DRAFT";
+type Announcement = { id: string; slug: string; title: string; content: string; mediaType: string; hasMedia: boolean; isPinned: boolean; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; publishedAt: string | null; createdAt: string };
+type Confirmation = { title: string; description: string; danger?: boolean; run: () => Promise<void> };
+const labels = { DRAFT: "Draft", PUBLISHED: "Terbit", ARCHIVED: "Arsip" };
 
 export function AnnouncementManager() {
     const [items, setItems] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
-    const [filter, setFilter] = useState<Filter>("ALL");
-
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
+    const [filter, setFilter] = useState("ALL");
+    const [query, setQuery] = useState("");
+    const [editor, setEditor] = useState<{ item: Announcement | null } | null>(null);
+    const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
     const [mediaType, setMediaType] = useState("TEXT");
-    const [isPinned, setIsPinned] = useState(false);
-    const [mediaFile, setMediaFile] = useState<File | null>(null);
-    const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const file = useRef<HTMLInputElement>(null);
+    const id = useId();
 
     async function refresh() {
         const response = await fetch("/api/admin/pengumuman", { cache: "no-store" });
-        if (response.ok) setItems((await response.json()) as Announcement[]);
+        if (!response.ok) throw new Error("Unable to load");
+        const result = await response.json();
+        setItems(Array.isArray(result) ? result : []);
     }
-
     useEffect(() => {
-        void fetch("/api/admin/pengumuman", { cache: "no-store" })
-            .then((response) => response.ok ? response.json() as Promise<Announcement[]> : [])
-            .then((result) => setItems(Array.isArray(result) ? result : []))
-            .finally(() => setLoading(false));
+        let active = true;
+        void fetch("/api/admin/pengumuman", { cache: "no-store" }).then(async (response) => {
+            if (!response.ok) throw new Error("Unable to load");
+            const result = await response.json();
+            if (active) setItems(Array.isArray(result) ? result : []);
+        }).catch(() => { if (active) setMessage("Daftar pengumuman belum dapat dimuat. Coba kembali."); }).finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
     }, []);
 
-    function startEdit(item: Announcement) {
-        setEditingId(item.id);
-        setTitle(item.title);
-        setContent(item.content);
-        setMediaType(item.mediaType);
-        setIsPinned(item.isPinned);
-        setMediaFile(null);
+    function openEditor(item: Announcement | null) { setMediaType(item?.mediaType ?? "TEXT"); setEditor({ item }); setMessage(""); }
+    async function mutate(method: string, body: BodyInit, isJson = false) {
+        setPending(true); setMessage("");
+        try {
+            const response = await fetch("/api/admin/pengumuman", { method, body, ...(isJson ? { headers: { "Content-Type": "application/json" } } : {}) });
+            const result = await response.json() as { message?: string };
+            setMessage(result.message ?? (response.ok ? "Pengumuman disimpan." : "Tindakan belum berhasil."));
+            if (response.ok) { setEditor(null); await refresh(); }
+        } catch { setMessage("Tindakan belum berhasil. Periksa koneksi dan coba kembali."); }
+        finally { setPending(false); }
     }
-
-    function resetForm() {
-        setEditingId(null);
-        setTitle("");
-        setContent("");
-        setMediaType("TEXT");
-        setIsPinned(false);
-        setMediaFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+    function requestSave(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const body = new FormData(event.currentTarget);
+        body.set("mediaType", mediaType);
+        if (editor?.item) body.set("id", editor.item.id);
+        const uploaded = body.get("media");
+        if (uploaded instanceof File && uploaded.size === 0) body.delete("media");
+        const status = String(body.get("status"));
+        setConfirmation({
+            title: status === "PUBLISHED" ? "Simpan dan terbitkan pengumuman?" : "Simpan pengumuman ini?",
+            description: status === "PUBLISHED" ? "Isi dan lampiran pengumuman akan dapat dibaca publik." : "Pengumuman disimpan untuk pengelolaan admin.",
+            run: () => mutate(editor?.item ? "PATCH" : "POST", body),
+        });
     }
-
-    async function doSubmit(status: "DRAFT" | "PUBLISHED") {
-        if (title.trim().length < 3 || content.trim().length < 1) {
-            setMessage("Judul dan isi pengumuman wajib diisi.");
-            return;
-        }
-        setPending(true);
-        setMessage("");
-
-        const formData = new FormData();
-        formData.set("title", title);
-        formData.set("content", content);
-        formData.set("mediaType", mediaType);
-        formData.set("isPinned", String(isPinned));
-        formData.set("status", status);
-        if (mediaFile) formData.set("media", mediaFile);
-        if (editingId) formData.set("id", editingId);
-
-        const response = await fetch("/api/admin/pengumuman", { method: editingId ? "PATCH" : "POST", body: formData });
-        const result = (await response.json()) as { message?: string };
-        setMessage(result.message ?? (response.ok ? (editingId ? "Pengumuman diperbarui." : "Pengumuman disimpan.") : "Gagal menyimpan."));
-        if (response.ok) resetForm();
-        void refresh();
-        setPending(false);
+    function requestAction(item: Announcement, action: "publish" | "unpublish" | "delete") {
+        setConfirmation({ title: action === "delete" ? "Hapus pengumuman?" : action === "publish" ? "Terbitkan pengumuman?" : "Kembalikan ke draft?", description: item.title + (action === "delete" ? " akan dihapus permanen." : action === "publish" ? " akan dapat dibaca publik." : " tidak lagi dapat dibaca publik."), danger: action !== "publish", run: () => mutate(action === "delete" ? "DELETE" : "PATCH", JSON.stringify({ id: item.id, action }), true) });
     }
-
-    async function setStatus(id: string, action: "publish" | "unpublish") {
-        setPending(true);
-        const response = await fetch("/api/admin/pengumuman", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, action }) });
-        if (!response.ok) {
-            const result = (await response.json()) as { message?: string };
-            setMessage(result.message ?? "Gagal.");
-        }
-        void refresh();
-        setPending(false);
-    }
-
-    async function remove(id: string) {
-        setPending(true);
-        await fetch("/api/admin/pengumuman", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-        setDeleteTarget(null);
-        void refresh();
-        setPending(false);
-    }
-
-    const filtered = items.filter((item) => filter === "ALL" || item.status === filter);
-    const inputClass = "w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--brand)]";
-
-    return (
-        <div className="space-y-6">
-            <div className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-extrabold text-[var(--ink)]">{editingId ? "Edit pengumuman" : "Buat pengumuman"}</h2>
-                <div className="mt-4 space-y-4">
-                    <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} placeholder="Judul pengumuman" className={inputClass} />
-                    <textarea value={content} onChange={(event) => setContent(event.target.value)} rows={5} placeholder="Isi pengumuman" className={inputClass} />
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        <select value={mediaType} onChange={(event) => setMediaType(event.target.value)} className={inputClass}>
-                            <option value="TEXT">Teks</option>
-                            <option value="PDF">PDF</option>
-                            <option value="VIDEO">Video</option>
-                        </select>
-                        {mediaType !== "TEXT" && (
-                            <input ref={fileInputRef} type="file" accept={mediaType === "PDF" ? "application/pdf,.pdf" : "video/mp4,video/webm,.mp4,.webm"} onChange={(event) => setMediaFile(event.target.files?.[0] ?? null)} className={inputClass} />
-                        )}
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
-                        <input type="checkbox" checked={isPinned} onChange={(event) => setIsPinned(event.target.checked)} /> Sematkan sebagai pengumuman penting
-                    </label>
-                </div>
-                {message && <p className="mt-3 text-sm text-[var(--muted)]" role="status">{message}</p>}
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <button type="button" disabled={pending} onClick={() => void doSubmit("PUBLISHED")} className="rounded-lg bg-[var(--leaf)] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
-                        {pending ? "Menyimpan..." : editingId ? "Simpan & Terbitkan" : "Terbitkan"}
-                    </button>
-                    <button type="button" disabled={pending} onClick={() => void doSubmit("DRAFT")} className="rounded-lg border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-[var(--ink)] disabled:opacity-60">
-                        Simpan sebagai Draft
-                    </button>
-                    {editingId && <button type="button" onClick={resetForm} className="rounded-lg border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-[var(--ink)]">Batal</button>}
-                </div>
-            </div>
-
-            <div>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-lg font-extrabold text-[var(--ink)]">Daftar pengumuman</h2>
-                    <div className="flex gap-1 rounded-lg border border-[var(--line)] bg-white p-1">
-                        {([["ALL", "Semua"], ["PUBLISHED", "Diterbitkan"], ["DRAFT", "Draft"]] as Array<[Filter, string]>).map(([value, label]) => (
-                            <button key={value} type="button" onClick={() => setFilter(value)} className={`rounded-md px-3 py-1.5 text-xs font-bold ${filter === value ? "bg-[var(--brand)] text-white" : "text-[var(--muted)]"}`}>
-                                {label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {loading ? (
-                    <div className="mt-4 space-y-3">{[0, 1].map((i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-white" />)}</div>
-                ) : filtered.length === 0 ? (
-                    <p className="mt-4 rounded-2xl border border-[var(--line)] bg-white p-6 text-sm text-[var(--muted)]">Belum ada pengumuman.</p>
-                ) : (
-                    <div className="mt-4 space-y-3">
-                        {filtered.map((item) => (
-                            <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <p className="font-bold text-[var(--ink)]">{item.title}</p>
-                                        {item.isPinned && <span className="rounded-full bg-[var(--gold-soft)] px-2 py-0.5 text-xs font-bold text-[var(--gold)]">Penting</span>}
-                                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${statusTone[item.status]}`}>{statusLabel[item.status] ?? item.status}</span>
-                                        {item.mediaType !== "TEXT" && <span className="rounded-full bg-[#e7f0fa] px-2 py-0.5 text-xs font-bold text-[var(--brand-dark)]">{item.mediaType}</span>}
-                                    </div>
-                                    <p className="mt-1 text-xs text-[var(--muted)]">{new Date(item.createdAt).toLocaleDateString("id-ID")}</p>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {item.status === "DRAFT" && <button type="button" onClick={() => void setStatus(item.id, "publish")} className="rounded-lg bg-[var(--leaf)] px-3 py-2 text-xs font-bold text-white">Terbitkan</button>}
-                                    {item.status === "PUBLISHED" && <button type="button" onClick={() => void setStatus(item.id, "unpublish")} className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]">Jadikan Draft</button>}
-                                    <button type="button" onClick={() => startEdit(item)} className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]">Edit</button>
-                                    <button type="button" onClick={() => setDeleteTarget(item)} className="rounded-lg border border-[var(--danger)] px-3 py-2 text-xs font-bold text-[var(--danger)]">Hapus</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {deleteTarget && (
-                <ConfirmDialog
-                    title="Hapus pengumuman?"
-                    description={`"${deleteTarget.title}" akan dihapus permanen.`}
-                    confirmLabel="Ya, Hapus"
-                    danger
-                    onCancel={() => setDeleteTarget(null)}
-                    onConfirm={() => void remove(deleteTarget.id)}
-                />
-            )}
-        </div>
-    );
+    const filtered = items.filter((item) => (filter === "ALL" || item.status === filter) && item.title.toLocaleLowerCase("id-ID").includes(query.trim().toLocaleLowerCase("id-ID")));
+    return <div className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-[var(--muted)]">{items.length} pengumuman · {items.filter((item) => item.status === "PUBLISHED").length} terbit</p><Button disabled={pending} onClick={() => openEditor(null)}><Icon name="plus" />Buat pengumuman</Button></div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]"><label><span className="sr-only">Cari pengumuman admin</span><input type="search" placeholder="Cari judul pengumuman..." value={query} onChange={(event) => setQuery(event.target.value)} className="w-full" /></label><label><span className="sr-only">Status publikasi</span><select value={filter} onChange={(event) => setFilter(event.target.value)} className="w-full"><option value="ALL">Semua status</option><option value="PUBLISHED">Terbit</option><option value="DRAFT">Draft</option><option value="ARCHIVED">Arsip</option></select></label></div>
+        {message && <p role="status" className="rounded-xl border border-[var(--line)] bg-white p-4 text-sm">{message}</p>}
+        {loading ? <p role="status" className="rounded-xl bg-white p-5">Memuat pengumuman...</p> : filtered.length ? <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-white">{filtered.map((item) => <article key={item.id} className="border-b border-[var(--line)] p-5 last:border-b-0">
+            <div className="flex flex-wrap gap-2 text-xs"><span className={"rounded px-2 py-1 font-semibold " + (item.status === "PUBLISHED" ? "ui-tone-done" : "ui-tone-progress")}>{labels[item.status]}</span><span className="rounded bg-[var(--surface)] px-2 py-1">{item.mediaType === "TEXT" ? "Teks" : item.mediaType}</span>{item.isPinned && <span className="rounded px-2 py-1 ui-tone-waiting">Penting</span>}</div>
+            <h2 className="mt-3 text-lg font-semibold"><Link href={"/admin/pengumuman/" + item.id} className="hover:underline">{item.title}</Link></h2><p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">{item.content}</p><p className="mt-2 text-xs text-[var(--muted)]">{new Date(item.publishedAt ?? item.createdAt).toLocaleDateString("id-ID", { timeZone: "Asia/Makassar" })}</p>
+            <div className="mt-4 flex flex-wrap gap-2"><Link href={"/admin/pengumuman/" + item.id} className="ui-button ui-button-secondary">Lihat detail</Link><Button variant="secondary" disabled={pending} onClick={() => openEditor(item)}>Edit</Button>{item.status !== "PUBLISHED" ? <Button variant="success" disabled={pending} onClick={() => requestAction(item, "publish")}>Terbitkan</Button> : <Button variant="secondary" disabled={pending} onClick={() => requestAction(item, "unpublish")}>Jadikan draft</Button>}<Button variant="ghost" disabled={pending} onClick={() => requestAction(item, "delete")} className="text-[var(--danger)]">Hapus</Button></div>
+        </article>)}</div> : <div className="rounded-xl border border-dashed border-[var(--line)] bg-white p-8 text-center"><Icon name="announcement" className="mx-auto size-10 text-[var(--brand)]" /><h2 className="mt-3 text-lg font-semibold">{items.length ? "Tidak ada hasil yang sesuai" : "Belum ada pengumuman"}</h2><p className="mt-2 text-sm text-[var(--muted)]">{items.length ? "Ubah kata kunci atau status yang dipilih." : "Buat informasi teks, unggah PDF, atau bagikan video untuk warga."}</p></div>}
+        {editor && <Dialog wide labelledBy={id} onClose={() => { if (!pending) setConfirmation({ title: "Tutup editor?", description: "Perubahan yang belum disimpan akan dibuang.", run: async () => { setEditor(null); } }); }}>
+            <div className="mb-5 flex items-start justify-between gap-3"><div><h2 id={id} className="text-2xl font-semibold">{editor.item ? "Edit pengumuman" : "Buat pengumuman"}</h2><p className="mt-1 text-sm text-[var(--muted)]">Teks dan lampiran ditampilkan sesuai status publikasinya.</p></div><Button disabled={pending} variant="secondary" aria-label="Tutup editor" onClick={() => setConfirmation({ title: "Tutup editor?", description: "Perubahan yang belum disimpan akan dibuang.", run: async () => { setEditor(null); } })}><Icon name="close" /></Button></div>
+            <form key={editor.item?.id ?? "new"} className="grid gap-5" onSubmit={requestSave}>
+                <label className="text-sm font-semibold">Judul<input autoFocus name="title" defaultValue={editor.item?.title ?? ""} required minLength={3} maxLength={160} className="mt-2 w-full" /></label>
+                <label className="text-sm font-semibold">Isi pengumuman<textarea name="content" defaultValue={editor.item?.content ?? ""} required maxLength={20000} rows={7} className="mt-2 w-full" /></label>
+                <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Jenis media<select value={mediaType} onChange={(event) => { setMediaType(event.target.value); if (file.current) file.current.value = ""; }} className="mt-2 w-full"><option value="TEXT">Teks</option><option value="PDF">PDF</option><option value="VIDEO">Video</option></select></label><label className="text-sm font-semibold">Status publikasi<select name="status" defaultValue={editor.item?.status ?? "DRAFT"} className="mt-2 w-full"><option value="DRAFT">Draft</option><option value="PUBLISHED">Terbit</option>{editor.item?.status === "ARCHIVED" && <option value="ARCHIVED">Arsip</option>}</select></label></div>
+                {mediaType !== "TEXT" && <label className="text-sm font-semibold">Lampiran {editor.item?.hasMedia && editor.item.mediaType === mediaType ? "(opsional: unggah untuk mengganti)" : "(wajib)"}<input ref={file} name="media" type="file" required={!editor.item?.hasMedia || editor.item.mediaType !== mediaType} accept={mediaType === "PDF" ? "application/pdf,.pdf" : "video/mp4,video/webm,.mp4,.webm"} className="mt-2 block w-full rounded-xl border border-[var(--line)] p-3 text-sm" /><span className="mt-2 block text-xs font-normal text-[var(--muted)]">{mediaType === "PDF" ? "PDF maksimal 10 MB. Halaman pertama menjadi thumbnail." : "MP4 / WEBM maksimal 50 MB. Thumbnail diambil dari video."}</span></label>}
+                <label className="flex items-center gap-3 text-sm"><input type="checkbox" name="isPinned" defaultChecked={editor.item?.isPinned} />Sematkan sebagai pengumuman penting</label>
+                {message && <p role="status" className="text-sm text-[var(--danger)]">{message}</p>}
+                <button type="submit" disabled={pending} className="ui-button ui-button-primary justify-self-start">{pending ? "Menyimpan..." : editor.item ? "Simpan perubahan" : "Simpan pengumuman"}</button>
+            </form>
+        </Dialog>}
+        {confirmation && <ConfirmDialog title={confirmation.title} description={confirmation.description} danger={confirmation.danger} confirmLabel="Ya, lanjutkan" onCancel={() => setConfirmation(null)} onConfirm={() => { const action = confirmation; setConfirmation(null); void action.run(); }} />}
+    </div>;
 }

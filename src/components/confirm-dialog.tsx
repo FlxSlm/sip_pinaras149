@@ -1,5 +1,10 @@
 "use client";
 
+import { useId } from "react";
+import { Dialog } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/primitives";
+
 type Props = {
     title: string;
     description?: string;
@@ -11,25 +16,22 @@ type Props = {
 };
 
 export function ConfirmDialog({ title, description, confirmLabel = "Ya", cancelLabel = "Batalkan", danger = false, onConfirm, onCancel }: Props) {
+    const id = useId();
     return (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(18,50,59,0.52)] px-5" role="dialog" aria-modal="true">
-            <div className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-6 shadow-2xl">
-                <div className="flex items-start gap-3">
-                    <div className={`grid size-10 shrink-0 place-items-center rounded-full text-lg ${danger ? "bg-[#fbe9e7] text-[var(--danger)]" : "bg-[var(--soft-accent)] text-[var(--leaf-dark)]"}`}>!</div>
-                    <div>
-                        <h2 className="text-lg font-bold text-[var(--ink)]">{title}</h2>
-                        {description ? <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{description}</p> : null}
-                    </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-2">
-                    <button type="button" onClick={onCancel} className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-bold text-[var(--ink)]">
-                        {cancelLabel}
-                    </button>
-                    <button type="button" onClick={onConfirm} className={`rounded-lg px-4 py-2 text-sm font-bold text-white ${danger ? "bg-[var(--danger)]" : "bg-[var(--brand)]"}`}>
-                        {confirmLabel}
-                    </button>
+        <Dialog labelledBy={`${id}-title`} describedBy={description ? `${id}-description` : undefined} onClose={onCancel}>
+            <div className="flex items-start gap-4">
+                <span className={`grid size-12 shrink-0 place-items-center rounded-2xl ${danger ? "ui-tone-rejected" : "ui-tone-progress"}`}>
+                    <Icon name={danger ? "warning" : "info"} className="size-6" />
+                </span>
+                <div className="min-w-0">
+                    <h2 id={`${id}-title`} className="text-xl font-semibold">{title}</h2>
+                    {description && <p id={`${id}-description`} className="mt-2 text-sm leading-6 text-[var(--muted)]">{description}</p>}
                 </div>
             </div>
-        </div>
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button variant="secondary" autoFocus onClick={onCancel}>{cancelLabel}</Button>
+                <Button variant={danger ? "danger" : "primary"} onClick={onConfirm}>{confirmLabel}</Button>
+            </div>
+        </Dialog>
     );
 }

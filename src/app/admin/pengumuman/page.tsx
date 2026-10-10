@@ -13,7 +13,7 @@ export default async function AdminAnnouncementsPage() {
 
     return (
         <DashboardShell role="admin" userName={session.user.name ?? session.user.email ?? "Admin Kelurahan"}>
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-6xl">
                 <h1 className="text-2xl font-extrabold text-[var(--ink)]">Pengumuman</h1>
                 <p className="mt-1 text-sm text-[var(--muted)]">Kelola pengumuman publik. Hanya pengumuman berstatus Terbit yang tampil di landing page.</p>
                 <div className="mt-6">

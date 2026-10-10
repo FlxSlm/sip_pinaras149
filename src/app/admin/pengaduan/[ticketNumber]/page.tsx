@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
-import Image from "next/image";
+import { EvidenceGallery } from "@/components/evidence-gallery";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -54,10 +54,10 @@ export default async function AdminComplaintDetailPage({ params }: { params: Pro
 
     return (
         <DashboardShell role="admin" userName={session.user.name ?? session.user.email ?? "Admin Kelurahan"}>
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-6xl">
                 <Link href="/admin/pengaduan" className="text-sm font-bold text-[var(--brand)]">← Kembali ke daftar pengaduan</Link>
 
-                <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
+                <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
                     <div className="space-y-6">
                         <article className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
                             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -77,13 +77,7 @@ export default async function AdminComplaintDetailPage({ params }: { params: Pro
                             {complaint.evidences.length > 0 && (
                                 <>
                                     <h2 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Bukti foto</h2>
-                                    <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                        {complaint.evidences.map((evidence) => (
-                                            <div key={evidence.id} className="relative aspect-video overflow-hidden rounded-xl border border-[var(--line)]">
-                                                <Image src={`/api/pengaduan/${complaint.ticketNumber}/evidence/${evidence.id}`} alt="Bukti pengaduan" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" />
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <EvidenceGallery ticketNumber={complaint.ticketNumber} evidenceIds={complaint.evidences.map((e) => e.id)} />
                                 </>
                             )}
                         </article>

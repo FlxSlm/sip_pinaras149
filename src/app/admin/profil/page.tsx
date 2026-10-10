@@ -17,11 +17,13 @@ export default async function AdminProfilePage() {
 
     return (
         <DashboardShell role="admin" userName={user?.name ?? "Admin Kelurahan"}>
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-6xl">
                 <h1 className="text-2xl font-extrabold text-[var(--ink)]">Profil Admin</h1>
+                <p className="mt-2 text-sm text-[var(--muted)]">Kelola identitas tampilan dan keamanan akun kelurahan.</p>
+                <div className="grid items-start gap-5 xl:grid-cols-2">
 
                 <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
-                    <ProfilePhotoForm imageUrl={user?.customImage ? "/api/profile/photo" : (user?.image ?? null)} name={user?.name ?? "A"} />
+                    <ProfilePhotoForm imageUrl={user?.customImage ? "/api/profile/photo" : (user?.image ?? null)} name={user?.name ?? "A"} hasCustomPhoto={Boolean(user?.customImage)} />
                     <div className="mt-6 grid gap-4 border-t border-[var(--line)] pt-6 sm:grid-cols-2">
                         <div>
                             <p className="text-sm font-semibold text-[var(--muted)]">Username</p>
@@ -37,6 +39,7 @@ export default async function AdminProfilePage() {
                 <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-extrabold text-[var(--ink)]">Ganti password</h2>
                     <AdminPasswordForm />
+                </div>
                 </div>
             </div>
         </DashboardShell>

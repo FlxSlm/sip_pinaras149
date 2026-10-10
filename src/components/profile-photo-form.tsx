@@ -1,23 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { Avatar } from "@/components/avatar";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
-export function ProfilePhotoForm({ imageUrl, name }: { imageUrl: string | null; name: string }) {
+export function ProfilePhotoForm({ imageUrl, name, hasCustomPhoto }: { imageUrl: string | null; name: string; hasCustomPhoto: boolean }) {
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
     const [confirming, setConfirming] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     async function uploadFile(file: File) {
         setPending(true);
         setMessage("");
         try {
-            const { upload } = await import("@vercel/blob/client");
-            await upload(file.name, file, {
-                access: "private",
-                handleUploadUrl: "/api/profile/photo",
-            });
+            const form = new FormData();
+            form.set("photo", file);
+            const response = await fetch("/api/profile/photo", { method: "POST", body: form });
+            if (!response.ok) throw new Error("Upload failed");
             setMessage("Foto profil diperbarui.");
             window.location.reload();
         } catch {
@@ -29,19 +29,21 @@ export function ProfilePhotoForm({ imageUrl, name }: { imageUrl: string | null; 
     async function removePhoto() {
         setPending(true);
         setMessage("");
+        try {
         const response = await fetch("/api/profile/photo", { method: "DELETE" });
         const result = (await response.json()) as { message?: string };
         setMessage(result.message ?? (response.ok ? "Foto profil dihapus." : "Gagal menghapus foto."));
         if (response.ok) window.location.reload();
+        } catch { setMessage("Foto belum dapat dihapus. Periksa koneksi lalu coba kembali."); }
         setPending(false);
         setConfirming(false);
     }
 
     return (
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center gap-5">
             <div className="relative size-20 shrink-0 overflow-hidden rounded-full border border-[var(--line)] bg-[var(--surface-2)]">
                 {imageUrl ? (
-                    <Image src={imageUrl} alt="Foto profil" fill sizes="80px" className="object-cover" />
+                    <Avatar src={imageUrl} name={name} className="size-20" />
                 ) : (
                     <span className="grid size-full place-items-center text-2xl font-bold text-[var(--brand)]">{(name || "W").slice(0, 1).toUpperCase()}</span>
                 )}
@@ -50,9 +52,9 @@ export function ProfilePhotoForm({ imageUrl, name }: { imageUrl: string | null; 
                 <div className="flex flex-wrap gap-2">
                     <label className="cursor-pointer rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white">
                         {pending ? "Mengunggah..." : "Ganti foto profil"}
-                        <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file); }} />
+                        <input type="file" disabled={pending} accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) { setMessage("Pilih JPG, PNG, atau WEBP maksimal 5 MB."); return; } setSelectedFile(file); }} />
                     </label>
-                    {imageUrl && (
+                    {hasCustomPhoto && (
                         <button type="button" onClick={() => setConfirming(true)} disabled={pending} className="rounded-lg border border-[var(--danger)] px-4 py-2 text-sm font-bold text-[var(--danger)] disabled:opacity-60">
                             Hapus foto
                         </button>
@@ -64,13 +66,14 @@ export function ProfilePhotoForm({ imageUrl, name }: { imageUrl: string | null; 
             {confirming && (
                 <ConfirmDialog
                     title="Hapus foto profil?"
-                    description="Foto profil Anda akan dihapus dan diganti dengan avatar awal."
+                    description="Foto unggahan Anda akan dihapus. Profil kembali memakai foto bawaan atau inisial nama."
                     confirmLabel="Ya, Hapus"
                     danger
                     onCancel={() => setConfirming(false)}
                     onConfirm={() => void removePhoto()}
                 />
             )}
+            {selectedFile && <ConfirmDialog title="Ganti foto profil?" description={`Foto ${selectedFile.name} akan menggantikan foto profil Anda.`} confirmLabel="Ya, ganti foto" onCancel={() => setSelectedFile(null)} onConfirm={() => { const file = selectedFile; setSelectedFile(null); void uploadFile(file); }} />}
         </div>
     );
 }

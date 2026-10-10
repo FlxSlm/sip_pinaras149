@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   description: "Sistem Informasi Peduli Pinaras",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/images/logo tomohon.png", apple: "/images/logo tomohon.png" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#063d64",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

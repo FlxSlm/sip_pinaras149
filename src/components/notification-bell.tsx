@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Icon } from "@/components/ui/icon";
 
 export function NotificationBell({ href }: { href: string }) {
     const [unreadCount, setUnreadCount] = useState(0);
@@ -20,11 +21,9 @@ export function NotificationBell({ href }: { href: string }) {
     }, []);
 
     return (
-        <Link href={href} aria-label="Buka notifikasi" className="relative rounded-full border border-[var(--line)] bg-white px-3 py-2 text-lg shadow-sm">
-            <span className="grid place-items-center text-[var(--ink)]" aria-hidden="true">
-                <svg viewBox="0 0 24 24" className="size-5" fill="currentColor"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2Z" /></svg>
-            </span>
-            {unreadCount > 0 && <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[var(--leaf)] px-1 text-center text-xs font-bold text-white">{unreadCount}</span>}
+        <Link href={href} aria-label={`Buka notifikasi${unreadCount > 0 ? `, ${unreadCount} belum dibaca` : ""}`} className="relative grid size-11 place-items-center rounded-xl text-[var(--brand-dark)] hover:bg-[var(--brand-soft)]">
+            <Icon name="bell" className="size-6" />
+            {unreadCount > 0 && <span aria-hidden="true" className="absolute right-0 top-0 min-w-5 rounded-full bg-[var(--danger)] px-1 text-center text-xs font-semibold leading-5 text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
         </Link>
     );
 }

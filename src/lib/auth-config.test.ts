@@ -17,7 +17,7 @@ describe("authOptions.signIn callback", () => {
     const signIn = authOptions.callbacks?.signIn as unknown as (params: unknown) => Promise<boolean>;
 
     it("WARGA boleh login via Google OAuth", async () => {
-        expect(await signIn({ user: { id: "u1", role: "WARGA" }, account: { type: "oauth" } })).toBe(true);
+        expect(await signIn({ user: { id: "u1", role: "WARGA" }, account: { type: "oauth", provider: "google" } })).toBe(true);
     });
 
     it("ADMIN_KELURAHAN tidak boleh login via Google OAuth", async () => {

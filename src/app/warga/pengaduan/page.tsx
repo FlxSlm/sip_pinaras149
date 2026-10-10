@@ -21,7 +21,7 @@ export default async function WargaComplaintsPage() {
 
     return (
         <DashboardShell role="warga" userName={session.user.name ?? session.user.email ?? "Warga"}>
-            <div className="mx-auto max-w-3xl">
+            <div className="mx-auto max-w-5xl">
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-extrabold text-[var(--ink)]">Riwayat Pengaduan</h1>

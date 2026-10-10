@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
-import Image from "next/image";
+import { EvidenceGallery } from "@/components/evidence-gallery";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -72,13 +72,7 @@ export default async function WargaComplaintDetailPage({ params }: { params: Pro
                     {complaint.evidences.length > 0 && (
                         <>
                             <h2 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Bukti foto</h2>
-                            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                {complaint.evidences.map((evidence) => (
-                                    <div key={evidence.id} className="relative aspect-video overflow-hidden rounded-xl border border-[var(--line)]">
-                                        <Image src={`/api/pengaduan/${complaint.ticketNumber}/evidence/${evidence.id}`} alt="Bukti pengaduan" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover" />
-                                    </div>
-                                ))}
-                            </div>
+                            <EvidenceGallery ticketNumber={complaint.ticketNumber} evidenceIds={complaint.evidences.map((e) => e.id)} />
                         </>
                     )}
 

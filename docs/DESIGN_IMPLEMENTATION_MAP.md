@@ -1,114 +1,128 @@
-# SIPP V2 — Design Implementation Map
+# SIPP V2 — Pemetaan desain UI/UX
 
-Peta pemetaan asset desain UI ke implementasi. **Desain = visual reference**,
-sedangkan `docs/*` = business source of truth. Jika teks pada gambar desain
-bertentangan dengan docs V2, docs V2 menang.
+Diperbarui pada 10 Oktober 2026 setelah pemeriksaan langsung delapan aset PNG/JPG di
+`public/images` beserta metadata HEIC. Tidak ditemukan subfolder.
 
-> **Keterbatasan pemetaan:** model pada sesi ini tidak dapat membaca isi visual
-> gambar (PNG) secara langsung. Inventarisasi di bawah diturunkan dari **nama file**
-> yang deskriptif, token desain yang sudah ada di kode (`src/app/globals.css`,
-> `src/components/dashboard-shell.tsx`), dan arahan desain pengguna (siluet alam
-> Tomohon sebagai latar). Nilai warna/tipe huruf persis pada PNG perlu diekstrak
-> manual (atau disampling saat implementasi) sebelum diterapkan 1:1.
+Mockup menentukan tampilan; dokumen V2 menentukan role, data, autentikasi, status,
+prioritas, dan privasi. Angka, nama orang, tanggal, notifikasi, serta persentase
+dalam mockup adalah contoh visual, bukan sumber data aplikasi.
 
----
+## Inventaris aset aktual
 
-## A. Design Asset Inventory
+- `DESAIN LANDING PAGE.png` — PNG, 1024 × 1536, 2.085.564 byte.
+  Mockup halaman publik panjang. Navbar terang dengan identitas biru tua,
+  hero foto, aksen hijau, statistik berbentuk kartu, profil dua kolom,
+  potensi, fasilitas/pengumuman, forum/galeri, lokasi, CTA, footer gelap.
+  Acuan utama untuk `/`; pola kartu dan navigasi untuk `/pengaduan`,
+  `/pengaduan/[ticketNumber]`, `/pengumuman`, `/pengumuman/[slug]`, `/offline`.
+- `DESAIN LOGIN.png` — PNG, 1536 × 1024, 2.242.222 byte.
+  Mockup login dua kolom di atas foto lanskap. Teks sambutan kiri,
+  kartu putih kanan, Google terlebih dahulu, pemisah, form admin, CTA hijau.
+  Acuan untuk `/login`. Tautan lupa password pada mockup tidak
+  mengizinkan pembuatan mekanisme reset baru dalam milestone frontend ini.
+- `DASHBOARD WARGA.png` — PNG, 1536 × 1024, 1.856.274 byte.
+  Mockup sidebar biru dengan foto pada bagian bawah, menu aktif biru cerah,
+  header putih, ringkasan empat kartu, donut, pengaduan/notifikasi,
+  informasi dan aksi cepat. Acuan untuk seluruh `/warga/**`.
+- `DASHBOARD ADMIN.png` — PNG, 1536 × 1024, 1.660.140 byte.
+  Mockup shell yang sama, ringkasan, dua grafik, tabel pengaduan, notifikasi.
+  Acuan untuk seluruh `/admin/**`.
+- `DESAIN PENGUMUMAN.png` — PNG, 1214 × 1295, 1.757.204 byte.
+  Referensi tambahan tahap 2: banner, breadcrumb, daftar pengumuman dengan
+  thumbnail, metadata, pencarian, pagination, dan sidebar informasi.
+  Acuan untuk `/pengumuman` serta komposisi detail. Kategori, tanggal, dan
+  alamat contoh tidak disalin sebagai data. Thumbnail berasal dari lampiran
+  pengumuman terbit; teks menggunakan stiker ikon pengumuman.
+- `panorama-pinaras.png` — PNG, 941 × 1672, 3.650.206 byte.
+  Foto udara vertikal permukiman dan vegetasi; bukan siluet/vector,
+  bukan foto landscape gunung yang sama seperti dalam mockup.
+  Dapat digunakan pada sidebar, hero, dan konten sesuai konteks/crop.
+  Identitas lokasi, kredit, dan lisensinya perlu verifikasi sumber.
+- `logo tomohon.png` — PNG, 564 × 543, 35.531 byte.
+  Lambang Tomohon dengan latar putih; gunakan path dengan spasi yang benar.
+  Aset identitas header/sidebar/footer; jangan memotong bentuk lambang.
+- `Google Logo.jpg` — JPG, 840 × 859, 40.808 byte.
+  Logo G berwarna dengan pola kotak abu-abu yang menyatu dengan JPG.
+  Bukan transparansi asli. Acuan identitas tombol Google pada login;
+  perlu aset resmi yang lebih bersih untuk kualitas final.
+- `airterjun_tumimperas.HEIC` — HEIC/HEVC, metadata 3024 × 4032,
+  3.443.304 byte. Nama file mengindikasikan foto air terjun, namun isi
+  gambarnya belum dapat diperiksa: Sharp yang tersedia dapat membaca metadata
+  tetapi tidak memiliki decoder HEVC untuk membuat preview.
+  Jangan menganggap nama/lokasi sebagai fakta terverifikasi. Kandidat galeri/
+  potensi setelah preview, provenance, serta konversi web diverifikasi.
+  Tidak dipasang sebagai aset runtime dan tidak diubah.
 
-Lokasi: `public/images/`
+Tidak ada aset foto landscape gunung, pertanian, kegiatan warga, atau peta yang
+terpisah dari screenshot mockup. Jangan memasang screenshot sebagai background
+halaman atau mengarang aset penggantinya.
 
-| Filename | Jenis halaman | Target route V2 | Target user | Status |
-|---|---|---|---|---|
-| `DESAIN LANDING PAGE.png` | Landing page publik | `/` | Guest/Public | reference (baru, 06/10) |
-| `DESAIN LOGIN.png` | Halaman login | `/login` | Public | reference (baru, 06/10) |
-| `DESAIN NEW DASHBOARD WARGA.png` | Dashboard warga | `/warga` | WARGA | reference |
-| `DESAIN NEW DASHBOARD LURAH.png` | Dashboard admin (dari desain V1 "Lurah") | `/admin` | ADMIN_KELURAHAN | reference (role diganti) |
-| `DESAIN NEW DASHBOARD KEPALA LINGKUNGAN.png` | Dashboard operasional (dari desain V1 "Kepala Lingkungan") | (diadopsi pola untuk queue complaint admin) | — (role obsolete) | reference (role obsolete) |
-| `panorama-pinaras.png` | Siluet/hero panorama Tomohon | global (hero + background) | semua | **reuse aktif** |
-| `google-logo.jpg` | Logo tombol Google login | `/login` | Public | **reuse aktif** |
+## Dokumen lama dan konflik yang ditemukan
 
-Catatan:
-- `DESAIN NEW -sipp-reference OLD.png` **telah dihapus** (terlihat di `git status` sebagai `D`).
-- Tidak ada file desain khusus untuk: riwayat/detail pengaduan, halaman notifikasi,
-  CMS admin, profil, editor pengumuman, dan detail complaint admin. Pola visualnya
-  diturunkan dari 5 file desain di atas.
-- `DESAIN ... LURAH` dan `... KEPALA LINGKUNGAN` memakai role lama. Struktur
-  menu/role-nya **tidak** berlaku di V2; hanya gaya visual (warna, sidebar, kartu,
-  badge) yang diadopsi untuk dashboard `ADMIN_KELURAHAN`.
+Pemetaan lama berdasarkan nama file saja dan mengaku tidak dapat melihat PNG.
+Dokumen ini menggantikannya dengan inventaris dan inspeksi visual aktual.
 
-## B. Page-to-Feature Mapping
+Tiga file berikut sudah berstatus dihapus pada working tree sebelum redesign:
+`DESAIN NEW DASHBOARD WARGA.png`,
+`DESAIN NEW DASHBOARD LURAH.png`,
+`DESAIN NEW DASHBOARD KEPALA LINGKUNGAN.png`.
+Redesign tidak menghapus, memulihkan, atau mengubah aset tersebut.
 
-| Halaman | Target user | Sifat | Route V2 | Sumber desain |
-|---|---|---|---|---|
-| Landing page | Public | dynamic CMS | `/` | `DESAIN LANDING PAGE.png` |
-| Login | Public | Google OAuth (warga) + credentials (admin) | `/login` | `DESAIN LOGIN.png` |
-| Warga dashboard | WARGA | protected | `/warga` | `DESAIN NEW DASHBOARD WARGA.png` |
-| Riwayat pengaduan | WARGA | protected | `/warga/pengaduan` | turunan dari dashboard warga |
-| Detail pengaduan (private) | WARGA owner | protected | `/warga/pengaduan/[ticketNumber]` | turunan |
-| Notifikasi | WARGA + ADMIN | protected | `/notifikasi` | turunan (bell + list) |
-| Admin dashboard | ADMIN_KELURAHAN | protected | `/admin` | `DESAIN ... LURAH.png` |
-| Admin complaint (queue) | ADMIN_KELURAHAN | protected | `/admin/pengaduan` | `DESAIN ... KEPALA LINGKUNGAN.png` (pola) |
-| Announcement editor | ADMIN_KELURAHAN | protected | `/admin/pengumuman` | turunan |
-| CMS / Konten Kelurahan | ADMIN_KELURAHAN | protected | `/admin/konten` | turunan |
-| Profil | WARGA + ADMIN | protected | `/warga/profil`, `/admin/profil` | turunan |
-| Public complaint forum | Public | public | `/pengaduan`, `/pengaduan/[ticketNumber]` | `DESAIN LANDING PAGE.png` (pola) |
+Mockup warga menampilkan Ditolak dalam daftar tetapi tidak dalam diagram.
+Mockup admin mencampurkan Perlu Perhatian dengan Menunggu/Diproses dalam satu
+diagram, dan angka/persentasenya tidak selalu konsisten. Target V2 tetap empat
+status, sedangkan prioritas adalah dimensi terpisah. Komposisi grafik sudah
+dikoreksi pada tahap 2 dengan pilihan doughnut/pie/batang dan legenda status nol;
+semantik backend tetap.
 
-## C. Component Mapping (lama → V2)
+Label panjang SIPP pada beberapa mockup memakai “Pengaduan Publik”.
+Identitas aplikasi mengikuti dokumen V2: “Sistem Informasi Peduli Pinaras”.
 
-| Komponen V1 | Reusable | Perlu adaptasi | Harus diganti |
-|---|---|---|---|
-| `dashboard-shell.tsx` | — | ✅ (role/menu berubah; unifikasi palette) | — |
-| `notification-bell.tsx` | ✅ | ringan (generic link + full page) | — |
-| `text-prompt-dialog.tsx` | ✅ | — | — |
-| `logout-button.tsx` | ✅ | — | — |
-| `service-worker-register.tsx` | ✅ | — | — |
-| `complaint-form.tsx` | — | ✅ (hapus lingkungan/username, tambah lokasi) | — |
-| `public-complaint-list.tsx` | — | ✅ (status-based, sanitized DTO) | — |
-| `announcement-form.tsx` | — | — | ✅ (ganti status + media type) |
-| `rating-control.tsx` | — | — | ✅ (fitur dihapus) |
-| `publication-control.tsx` | — | — | ✅ (publikasi manual dihapus) |
-| `username-form.tsx` | — | — | ✅ (username dihapus) |
-| `neighborhood-inbox.tsx` | — | — | ✅ (role obsolete) |
-| `lurah-inbox.tsx` | — | — | ✅ (workflow obsolete) |
+## Sistem desain fondasi
 
-## D. Design System Mapping
+- Teks utama biru tua `#10366b`, teks sekunder `#587094`.
+- Latar dashboard biru sangat terang `#f2f8fe`, kartu putih,
+  border `#dce8f4`, shadow ringan.
+- Aksi/dashboard biru `#087ac1`; hijau publik/login `#07845c`
+  dengan tombol hijau gelap `#065e49`.
+- Status: amber untuk Menunggu, biru Diproses, hijau Selesai, merah Ditolak.
+  Semua badge tetap memiliki label teks.
+- Radius kontrol 12 px, kartu 16 px; kontrol utama minimum 44 px.
+- Arial/Helvetica/sans-serif dengan ukuran dasar 17 px mengikuti permintaan
+  pengguna pada tahap 2. Metadata/tombol/tabel diperbesar. Tidak menambah
+  dependency atau unduhan font eksternal.
+- Ikon SVG bergaya stroke konsisten, tanpa emoji antarmuka.
+- Fokus keyboard terlihat, scroll anchor menghindari header tetap,
+  animasi menghormati reduced motion.
+- Desktop sidebar 17 rem; drawer modal di bawah 1024 px dengan close,
+  Escape, scroll internal, dan focus containment.
+- Dialog native `showModal()` untuk modal/drawer, background inert,
+  label terhubung, serta fokus kembali saat ditutup.
+- Komponen tersedia di `src/components/ui`: Button, Card, Input, Select,
+  Textarea, Notice, EmptyState, LoadingState, TableContainer, Icon, Dialog.
+  Komponen dipakai bertahap; styling inline lama belum seluruhnya dimigrasikan.
 
-Token yang sudah ada di kode (akan dijadikan satu sumber; **dua sistem yang sekarang
-bertabrakan harus disatukan**):
+Warna dan tipografi ini adalah interpretasi visual yang disesuaikan agar kontras
+teks normal minimal 4,5:1 pada kombinasi token yang diuji. Tidak diklaim sebagai
+ekstraksi font/warna persis dari screenshot.
 
-| Token | `globals.css` (landing) | `dashboard-shell.tsx` (dashboard) | Rekomendasi V2 |
-|---|---|---|---|
-| Background | `--surface #f4f6f3` | `#f5f8fc` | satukan ke satu `--surface` |
-| Primary text/ink | `--ink #122b3a` | `#173b68` / `#102b50` | satukan (candidate `#122b3a`) |
-| Accent | `--accent #c52f35` (merah) | `#2f83ed` (biru) | konfirmasi dari PNG (bila tidak ada, satukan) |
-| Muted | `--muted #66757d` | `#7890ae` | satukan |
-| Border | `--line #d9e1df` | `#e0e9f4` | satukan |
-| Gold/highlight | `--gold #b37713`, `--gold-soft #fff4d6` | — | pertahankan untuk badge/rating-like |
-| Soft accent | `--soft-accent #f8e5e2` | — | pertahankan |
-| Font | `"Trebuchet MS","Segoe UI",sans-serif` | sama (warisan) | konfirmasi dari PNG |
+## Urutan implementasi
 
-Arah desain final (sesuai permintaan pengguna):
-- **Siluet alam Tomohon** (gunung/pinus/lanskap) sebagai lapisan latar belakang di
-  hero, footer, dan panel dashboard; gunakan `panorama-pinaras.png` + gradasi overlay
-  gelap agar teks tetap kontras.
-- **Typography:** besar, mudah dibaca (mobile-first), bahasa Indonesia sederhana.
-- **Card:** rounded, border tipis, shadow lembut, background putih di atas `--surface`.
-- **Button:** pill/rounded, accent solid untuk aksi utama, outline untuk sekunder.
-- **Badge/status:** warna per status complaint (`MENUNGGU` abu/kuning, `DIPROSES` biru,
-  `SELESAI` hijau, `DITOLAK` merah) + badge priority (`NORMAL` netral, `PERLU_PERHATIAN` tegas).
-- **Sidebar (dashboard):** gelap (ink), menu bertingkat, indikator aktif.
-- **Navbar/header:** putih, bell notifikasi, avatar, nama user.
-- **Notification:** dropdown list + halaman penuh, unread count.
-- **Charts:** sederhana (donut/bar) untuk status & priority; library ringan.
-- **Forms:** input rounded, border `--line`, focus accent.
-- **Tables:** untuk admin queue; zebra/ringkas, mobile collapse.
-- **Responsive:** sidebar → top-bar/scroll pada <900px (sudah ada di `globals.css`).
+1. Fondasi: token/global layout, komponen bersama, navigasi publik,
+   shell dashboard, dialog, notifikasi, loading/error.
+   Integrasi navbar pada `/` hanya mengganti navigasi; isi CMS tetap.
+2. Publik: komposisi lengkap landing, login, forum/detail, pengumuman/detail,
+   offline dengan komponen fondasi.
+3. Warga: komposisi dashboard, riwayat, form, detail tiket, profil, notifikasi.
+4. Admin: komposisi dashboard, antrean/detail, pengumuman, CMS, profil, notifikasi.
 
-## E. Asset Reuse
+Verifikasi visual diperlukan pada lebar 360, 390, 768, 1024, dan 1440 px dengan
+data sintetis. Browser tidak tersedia dalam sesi implementasi fondasi; jangan
+menyatakan screenshot, focus/Escape runtime, atau seluruh responsivitas telah
+lulus sampai benar-benar diuji.
 
-| Asset | Keputusan |
-|---|---|
-| `panorama-pinaras.png` | reuse untuk hero/background siluet (jangan duplikat) |
-| `google-logo.jpg` | reuse untuk tombol Google login |
-| `icon-192.svg` / `icon-512.svg` | reuse sementara; **wajib tambah PNG 192/512** (PWA) |
-| 5 file `DESAIN...` | **referensi desain**, bukan asset runtime; tidak di-serve sebagai image halaman |
+Tahap 2 sudah mengimplementasikan komposisi landing dan pengumuman publik,
+layout publik bersama, pilihan grafik dashboard, perbaikan edit/detail
+pengumuman admin, upload/drop dan pembesaran bukti, avatar, konfirmasi tindakan,
+serta penataan profil/form/daftar/detail. Hasil verifikasi dan daftar file ada di
+`docs/UI_REDESIGN_STAGE_2.md`. Batas pengujian browser di atas masih berlaku.

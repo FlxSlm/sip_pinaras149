@@ -25,7 +25,7 @@ export default async function AdminComplaintsPage() {
 
     return (
         <DashboardShell role="admin" userName={session.user.name ?? session.user.email ?? "Admin Kelurahan"}>
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-6xl">
                 <h1 className="text-2xl font-extrabold text-[var(--ink)]">Pengaduan</h1>
 
                 <section className="mt-6">

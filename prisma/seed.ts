@@ -1,7 +1,10 @@
-import { randomBytes, scryptSync } from "node:crypto";
+import { loadEnvConfig } from "@next/env";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { PrismaClient, UserRole } from "../src/generated/prisma/client";
+import { seedAdmin } from "./seed-admin";
+
+loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
 
 const connectionString =
     process.env.DATABASE_URL ??
@@ -9,12 +12,6 @@ const connectionString =
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-
-function hashPassword(password: string): string {
-    const salt = randomBytes(16).toString("hex");
-    const hash = scryptSync(password, salt, 64).toString("hex");
-    return `scrypt:${salt}:${hash}`;
-}
 
 const statistics = [
     { label: "Luas wilayah", value: "3,98", unit: "km²", source: "BPS Tabel 1.1.1", sourceYear: "2020" },
@@ -68,25 +65,7 @@ const siteContent = {
 };
 
 async function main() {
-    const adminPassword = process.env.ADMIN_SEED_PASSWORD;
-    if (!adminPassword || adminPassword.length < 8) {
-        throw new Error("Peringatan Keamanan: ADMIN_SEED_PASSWORD harus diatur di environment variables dan minimal terdiri dari 8 karakter.");
-    }
-
-    const admin = await prisma.user.upsert({
-        where: { username: "admin.pinaras" },
-        update: {
-            name: "Admin Kelurahan Pinaras",
-            role: UserRole.ADMIN_KELURAHAN,
-            passwordHash: hashPassword(adminPassword),
-        },
-        create: {
-            username: "admin.pinaras",
-            name: "Admin Kelurahan Pinaras",
-            role: UserRole.ADMIN_KELURAHAN,
-            passwordHash: hashPassword(adminPassword),
-        },
-    });
+    const admin = await seedAdmin(prisma, process.env.ADMIN_SEED_PASSWORD);
 
     await prisma.user.upsert({
         where: { email: "warga.contoh@example.com" },
@@ -126,12 +105,12 @@ async function main() {
         });
     }
 
-    console.log(`Seeded 1 admin (${admin.id}), 1 warga, ${statistics.length} statistik, ${potentials.length} potensi, ${facilities.length} fasilitas, dan ${Object.keys(siteContent).length} konten landing.`);
+    console.log(`Admin ${admin.created ? "dibuat" : "dipertahankan tanpa perubahan password"}; seeded 1 warga, ${statistics.length} statistik, ${potentials.length} potensi, ${facilities.length} fasilitas, dan ${Object.keys(siteContent).length} konten landing.`);
 }
 
 main()
-    .catch((error) => {
-        console.error(error);
+    .catch(() => {
+        console.error("Seed gagal. Periksa konfigurasi dan status database; detail sensitif tidak dicetak.");
         process.exitCode = 1;
     })
     .finally(async () => {

@@ -41,29 +41,6 @@ export type LandingGallery = {
     published: boolean;
 };
 
-const defaultStatistics: LandingStatistic[] = [
-    { id: "stat-0", label: "Luas wilayah", value: "3,98", unit: "km²", source: "BPS Tabel 1.1.1", sourceYear: "2020", sourcePage: null, sortOrder: 0, published: true },
-    { id: "stat-1", label: "Penduduk", value: "2.341", unit: "jiwa", source: "BPS Tabel 3.1.2", sourceYear: "2020", sourcePage: null, sortOrder: 1, published: true },
-    { id: "stat-2", label: "Lingkungan setempat", value: "8", unit: "SLS", source: "BPS Tabel 2.1.1", sourceYear: "2020", sourcePage: null, sortOrder: 2, published: true },
-    { id: "stat-3", label: "Ketinggian", value: "661", unit: "mdpl", source: "BPS Tabel 1.1.3", sourceYear: "2020", sourcePage: null, sortOrder: 3, published: true },
-];
-
-const defaultPotentials: LandingPotential[] = [
-    { id: "potential-0", title: "Pertanian", description: "Tegal/kebun/ladang/huma seluas 346 ha.", imageRef: null, sortOrder: 0, published: true, sourceNote: "BPS Tabel 5.1" },
-    { id: "potential-1", title: "Tenaga petani", description: "467 penduduk bekerja sebagai petani.", imageRef: null, sortOrder: 1, published: true, sourceNote: "BPS Tabel 3.2.1" },
-    { id: "potential-2", title: "Industri mikro", description: "8 industri makanan dan 1 industri kayu.", imageRef: null, sortOrder: 2, published: true, sourceNote: "BPS Tabel 6.1.1" },
-    { id: "potential-3", title: "Pertukangan kayu", description: "69 jasa pertukangan kayu.", imageRef: null, sortOrder: 3, published: true, sourceNote: "BPS Tabel 6.1.2" },
-    { id: "potential-4", title: "Toko & warung", description: "30 toko/warung kelontong.", imageRef: null, sortOrder: 4, published: true, sourceNote: "BPS Tabel 7.1.1" },
-    { id: "potential-5", title: "Wisata alam", description: "1 objek wisata alam (nama belum diverifikasi).", imageRef: null, sortOrder: 5, published: true, sourceNote: "BPS Tabel 8.1.2" },
-];
-
-const defaultFacilities: LandingFacility[] = [
-    { id: "facility-0", name: "Pendidikan", category: "Pendidikan", description: "1 PAUD, 2 TK, 1 SD negeri, 1 SD swasta, 1 SMP swasta.", published: true, sourceNote: "BPS Tabel 4.1.1–4.1.4" },
-    { id: "facility-1", name: "Kesehatan", category: "Kesehatan", description: "1 Puskesmas, 1 Posyandu, 3 dokter.", published: true, sourceNote: "BPS Tabel 4.2.1–4.2.2" },
-    { id: "facility-2", name: "Peribadatan", category: "Peribadatan", description: "5 gereja Protestan dan 1 gereja Katolik.", published: true, sourceNote: "BPS Tabel 4.3.2" },
-    { id: "facility-3", name: "Energi & komunikasi", category: "Infrastruktur", description: "726 rumah tangga (PLN); 5 operator seluler dengan sinyal kuat.", published: true, sourceNote: "BPS Tabel 6.2.1, 9.1.2" },
-];
-
 const defaultSiteContent: Record<string, Record<string, unknown>> = {
     hero: {
         title: "Layanan kelurahan yang dekat, transparan, dan mudah diakses warga.",
@@ -113,9 +90,9 @@ export async function getLandingContent() {
         profil,
         lokasi,
         kontak,
-        statistics: statistics.length > 0 ? (statistics as unknown as LandingStatistic[]) : defaultStatistics,
-        potentials: potentials.length > 0 ? (potentials as unknown as LandingPotential[]) : defaultPotentials,
-        facilities: facilities.length > 0 ? (facilities as unknown as LandingFacility[]) : defaultFacilities,
+        statistics: statistics as unknown as LandingStatistic[],
+        potentials: potentials as unknown as LandingPotential[],
+        facilities: facilities as unknown as LandingFacility[],
         gallery: gallery as unknown as LandingGallery[],
     };
 }

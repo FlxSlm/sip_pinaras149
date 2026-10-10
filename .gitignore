@@ -44,3 +44,7 @@ next-env.d.ts
 /src/generated/
 
  
+# Generated from the pinned pdfjs-dist dependency by predev/prebuild.
+/public/vendor/pdfjs/
+/storage/
+/.ui-qa/

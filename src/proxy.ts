@@ -1,6 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getRoleHome, isUserRole } from "@/lib/authorization";
 
 export async function proxy(request: NextRequest) {
     const token = await getToken({
@@ -14,18 +15,19 @@ export async function proxy(request: NextRequest) {
     }
 
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
 
-    if (!token) {
+    if (!token?.userId || !isUserRole(token.role)) {
+        if (token) loginUrl.searchParams.set("error", "SessionRequired");
         return NextResponse.redirect(loginUrl);
     }
 
     if (pathname.startsWith("/warga") && token.role !== "WARGA") {
-        return NextResponse.redirect(new URL("/admin", request.url));
+        return NextResponse.redirect(new URL(getRoleHome(token.role), request.url));
     }
 
     if (pathname.startsWith("/admin") && token.role !== "ADMIN_KELURAHAN") {
-        return NextResponse.redirect(new URL("/warga", request.url));
+        return NextResponse.redirect(new URL(getRoleHome(token.role), request.url));
     }
 
     return NextResponse.next();

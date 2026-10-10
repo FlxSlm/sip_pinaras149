@@ -7,6 +7,7 @@ export function hashPassword(password: string): string {
 }
 
 export function verifyPassword(password: string, encodedHash: string): boolean {
+    if (!/^scrypt:[a-f0-9]{32}:[a-f0-9]{128}$/.test(encodedHash)) return false;
     const [algorithm, salt, encodedKey] = encodedHash.split(":");
     if (algorithm !== "scrypt" || !salt || !encodedKey) {
         return false;
