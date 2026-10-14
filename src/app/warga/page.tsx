@@ -1,17 +1,15 @@
-import { getServerSession } from "next-auth";
+import { getDashboardSession } from "@/lib/dashboard-session";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getComplaintStats } from "@/lib/dashboard";
 import { StatusBadge } from "@/components/status-badge";
 import { DonutChart } from "@/components/donut-chart";
-import { DashboardShell } from "@/components/dashboard-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function WargaDashboardPage() {
-    const session = await getServerSession(authOptions);
+    const session = await getDashboardSession();
     if (!session) redirect("/login");
     if (session.user.role !== "WARGA") redirect("/admin");
 
@@ -49,7 +47,7 @@ export default async function WargaDashboardPage() {
     ];
 
     return (
-        <DashboardShell role="warga" userName={userName}>
+        <>
             <div className="mx-auto max-w-[1400px]">
                 {/* Welcome Header */}
                 <div className="dashboard-hero mb-6 rounded-2xl p-6 text-white shadow-sm sm:p-8">
@@ -184,6 +182,6 @@ export default async function WargaDashboardPage() {
                     </div>
                 </div>
             </div>
-        </DashboardShell>
+        </>
     );
 }

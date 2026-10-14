@@ -6,9 +6,9 @@ import { seedAdmin } from "./seed-admin";
 
 loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
 
-const connectionString =
-    process.env.DATABASE_URL ??
-    "postgresql://postgres:postgres@localhost:5432/sip_pinaras?schema=public";
+if (process.env.NODE_ENV === "production" || process.env.VERCEL) throw new Error("Seed contoh/CMS tidak diizinkan pada deployment. Gunakan db:init-admin.");
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL wajib dikonfigurasi.");
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });

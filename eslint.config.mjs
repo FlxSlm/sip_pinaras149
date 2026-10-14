@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "public/vendor/pdfjs/**", // Generated, unmodified third-party distribution.
+    ".ui-qa/**", // Disposable browser-test snapshots and generated bundles.
+    ".deployment-qa/**",
   ]),
 ]);
 

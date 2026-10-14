@@ -28,7 +28,7 @@ async function main() {
   const response = await request("/api/auth/callback/credentials", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ csrfToken, username: "admin.pinaras", password: process.env.ADMIN_SEED_PASSWORD, callbackUrl: `${origin}/admin`, json: "true" }),
+    body: new URLSearchParams({ csrfToken, username: "kkt149unsrat@pinaras.com", password: process.env.ADMIN_SEED_PASSWORD, callbackUrl: `${origin}/admin`, json: "true" }),
   });
   const result = await response.json();
   const code = typeof result.url === "string" ? new URL(result.url, origin).searchParams.get("error") : null;
@@ -74,7 +74,7 @@ async function main() {
   const wrongCsrf = await (await request("/api/auth/csrf")).json();
   const wrongResponse = await request("/api/auth/callback/credentials", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ csrfToken: wrongCsrf.csrfToken, username: "admin.pinaras", password: `${process.env.ADMIN_SEED_PASSWORD}-incorrect`, callbackUrl: `${origin}/admin`, json: "true" }),
+    body: new URLSearchParams({ csrfToken: wrongCsrf.csrfToken, username: "kkt149unsrat@pinaras.com", password: `${process.env.ADMIN_SEED_PASSWORD}-incorrect`, callbackUrl: `${origin}/admin`, json: "true" }),
   });
   const wrongResult = await wrongResponse.json();
   const wrongSession = await (await request("/api/auth/session")).json();

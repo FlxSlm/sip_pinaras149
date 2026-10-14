@@ -1,7 +1,9 @@
 # SIPP V2 — CMS / Dynamic Landing Page Specification
 
 ## Tujuan
-Landing page SIPP dapat diubah Admin Kelurahan tanpa redeploy.
+Sesuai arahan pengguna 14 Oktober 2026, hanya **struktur kelurahan** yang dapat diubah Admin Kelurahan tanpa redeploy. Admin dapat memperbarui nama dan foto untuk jabatan pada bagan referensi yang diberikan pengguna. Jabatan tanpa nama tetap kosong hingga diisi admin. Data konten lain tetap disimpan dan dibaca, tetapi endpoint CMS menolak perubahan section lama.
+
+Daftar section berikut mendokumentasikan konten lama yang dipertahankan; section ini bukan lagi fitur CMS yang dapat diedit. Lihat [USER_REQUEST_2026_10_14.md](USER_REQUEST_2026_10_14.md) untuk provenance dan perubahan requirement.
 
 ## Section
 - Hero
@@ -44,7 +46,7 @@ Nama/alamat fasilitas yang tidak tersedia dari sumber resmi harus melalui verifi
 Gunakan satu foto lokal Pinaras yang kuat, landscape, dengan ruang visual untuk teks. Identitas visual terinspirasi lanskap Tomohon/Pinaras.
 
 ## Pengumuman
-Admin dapat membuat text/catatan, PDF, dan video. Status DRAFT/PUBLISHED/ARCHIVED. Hanya PUBLISHED tampil publik.
+Admin dapat membuat text/catatan, PDF, dan video. Sesuai arahan terbaru, hanya Draft dan Terbit tersedia pada editor, serta Semua/Terbit/Draft pada filter. Status baru hanya DRAFT/PUBLISHED. Nilai ARCHIVED lama tetap disimpan sebagai data historis dan ditampilkan sebagai Draft pada admin tanpa mengubah record saat dibaca. Hanya PUBLISHED tampil publik.
 
 ## Peta
 Koordinat/boundary harus dari data yang diverifikasi; jangan mengarang polygon administratif.

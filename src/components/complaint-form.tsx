@@ -4,6 +4,9 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Icon } from "@/components/ui/icon";
 import { mergeEvidenceFiles } from "@/lib/evidence-files";
+import { uploadPrivateFile, normalizeUploadImage } from "@/lib/upload-client";
+import { imageFileAccept } from "@/lib/image-files";
+import { neighborhoodValues } from "@/lib/neighborhoods";
 
 function FilePreview({ file }: { file: File }) {
     const ref = useRef<HTMLImageElement>(null);
@@ -19,6 +22,7 @@ function FilePreview({ file }: { file: File }) {
 export function ComplaintForm() {
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
+    const [converting, setConverting] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
     const [fileError, setFileError] = useState("");
     const [dragging, setDragging] = useState(false);
@@ -27,15 +31,20 @@ export function ComplaintForm() {
     const form = useRef<HTMLFormElement>(null);
     const depth = useRef(0);
 
-    function addFiles(incoming: File[]) {
-        const result = mergeEvidenceFiles(files, incoming);
-        setFiles(result.files);
-        setFileError(result.errors.join(" "));
+    async function addFiles(incoming: File[]) {
+        if (converting || pending) return;
+        setConverting(true);
+        try {
+            const normalized = [];
+            for (const file of incoming.slice(0, 8)) normalized.push(await normalizeUploadImage(file));
+            const result = mergeEvidenceFiles(files, normalized);
+            setFiles(result.files.slice(0, 8)); setFileError([...result.errors, ...(incoming.length + files.length > 8 ? ["Maksimal 8 foto bukti."] : [])].join(" "));
+        } catch (error) { setFileError(error instanceof Error ? error.message : "Foto belum dapat dibaca."); }
+        finally { setConverting(false); }
     }
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const body = new FormData(event.currentTarget);
-        files.forEach((file) => body.append("evidence", file));
         setSubmission(body);
     }
     async function send() {
@@ -45,16 +54,20 @@ export function ComplaintForm() {
         setPending(true);
         setMessage("");
         try {
+            if (files.length > 8) throw new Error("Maksimal 8 foto bukti.");
+            const uploadIds = [];
+            for (const file of files) uploadIds.push(await uploadPrivateFile(file, "EVIDENCE"));
+            body.set("evidenceUploadIds", JSON.stringify(uploadIds));
             const response = await fetch("/api/warga/pengaduan", { method: "POST", body });
             const result = await response.json() as { message?: string; complaint?: { ticketNumber: string } };
             setMessage(result.complaint ? result.message + " Nomor tiket: " + result.complaint.ticketNumber : result.message ?? "Pengaduan tidak dapat dikirim.");
-            if (response.ok) { form.current?.reset(); setFiles([]); setFileError(""); }
-        } catch { setMessage("Pengaduan tidak dapat dikirim. Periksa koneksi lalu coba lagi."); }
+            if (response.ok) { form.current?.reset(); setFiles([]); setFileError(""); window.dispatchEvent(new Event("sipp:notifications-changed")); }
+        } catch (error) { setMessage(error instanceof Error ? error.message : "Pengaduan tidak dapat dikirim. Periksa koneksi lalu coba lagi."); }
         finally { setPending(false); }
     }
 
     return <form ref={form} className="mt-5 space-y-5" onSubmit={handleSubmit}>
-        <fieldset disabled={pending} className="space-y-5">
+        <fieldset disabled={pending || converting} className="space-y-5">
             <label className="block text-sm font-semibold" htmlFor="title">Judul pengaduan
                 <input id="title" name="title" required minLength={5} maxLength={120} placeholder="Ringkas permasalahan yang ingin disampaikan" className="mt-2 w-full" />
             </label>
@@ -66,6 +79,9 @@ export function ComplaintForm() {
                     <input id="location" name="location" maxLength={200} placeholder="Alamat atau patokan lokasi" className="mt-2 w-full" />
                 </label>
             </div>
+            <label className="block text-sm font-semibold" htmlFor="neighborhood">Lingkungan lokasi kejadian
+                <select id="neighborhood" name="neighborhood" required defaultValue="" className="mt-2 w-full"><option value="" disabled>Pilih lingkungan</option>{neighborhoodValues.map((value) => <option key={value} value={value}>{value === "UNKNOWN" ? "Tidak Tahu" : `Lingkungan ${value}`}</option>)}</select>
+            </label>
             <label className="block text-sm font-semibold" htmlFor="description">Deskripsi
                 <textarea id="description" name="description" required maxLength={5000} rows={5} placeholder="Ceritakan kondisi, waktu kejadian, dan dampaknya." className="mt-2 w-full" />
             </label>
@@ -78,11 +94,12 @@ export function ComplaintForm() {
                     onDrop={(event) => { event.preventDefault(); depth.current = 0; setDragging(false); if (!pending) addFiles(Array.from(event.dataTransfer.files)); }}>
                     <span className="mx-auto grid size-12 place-items-center rounded-xl bg-white text-[var(--brand)]"><Icon name="upload" className="size-6" /></span>
                     <p className="mt-3 font-semibold">{dragging ? "Lepaskan foto untuk menambahkan" : "Tarik dan letakkan foto di sini"}</p>
-                    <p id="evidence-help" className="mt-1 text-sm text-[var(--muted)]">JPG, PNG, atau WEBP · maksimal 5 MB per foto</p>
+                    <p id="evidence-help" className="mt-1 text-sm text-[var(--muted)]">JPG, PNG, WEBP, atau HEIC · maksimal 8 foto, 5 MB per foto</p>
                     <button type="button" onClick={() => input.current?.click()} className="ui-button ui-button-secondary mt-3">Pilih foto</button>
-                    <input ref={input} id="evidence" aria-label="Pilih foto bukti" aria-describedby="evidence-help" type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
+                    <input ref={input} id="evidence" aria-label="Pilih foto bukti" aria-describedby="evidence-help" type="file" multiple accept={imageFileAccept} className="sr-only" onChange={(event) => { void addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
                 </div>
                 {fileError && <p role="alert" className="mt-2 text-sm text-[var(--danger)]">{fileError}</p>}
+                {converting && <p role="status" className="mt-2 text-sm">Menyiapkan foto…</p>}
                 {files.length > 0 && <ul className="mt-3 grid gap-2 sm:grid-cols-2">{files.map((file, i) => <li key={file.name + file.lastModified} className="flex min-w-0 items-center gap-3 rounded-xl border border-[var(--line)] bg-white p-3">
                     <FilePreview file={file} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{file.name}</p><p className="text-xs text-[var(--muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p></div>
                     <button type="button" aria-label={"Hapus pilihan " + file.name} onClick={() => setFiles(files.filter((_, index) => index !== i))} className="grid size-10 shrink-0 place-items-center rounded-lg text-[var(--danger)] hover:bg-[var(--danger-soft)]"><Icon name="close" /></button>

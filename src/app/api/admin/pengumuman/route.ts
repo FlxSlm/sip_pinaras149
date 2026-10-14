@@ -1,214 +1,88 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
 import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
-import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const MAX_PDF_BYTES = 10 * 1024 * 1024;
-const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
-
-const mediaRules: Record<string, { extensions: string[]; mimes: string[]; maxBytes: number }> = {
-    PDF: { extensions: ["pdf"], mimes: ["application/pdf"], maxBytes: MAX_PDF_BYTES },
-    VIDEO: { extensions: ["mp4", "webm"], mimes: ["video/mp4", "video/webm"], maxBytes: MAX_VIDEO_BYTES },
-};
-
-const announcementSchema = z.object({
-    title: z.string().trim().min(3).max(160),
-    content: z.string().trim().min(1).max(20000),
-    mediaType: z.enum(["TEXT", "PDF", "VIDEO"]).default("TEXT"),
-    isPinned: z.boolean().default(false),
-});
-
-function slugify(value: string) {
-    return value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 100);
+import { prepareUploads, consumeUploads, UploadError } from "@/lib/uploads";
+import { saveAnnouncementAttachments } from "@/lib/save-announcement-attachments";
+import { attachmentViews } from "@/lib/announcement-attachments";
+export const runtime = "nodejs";
+const schema=z.object({title:z.string().trim().min(3).max(160),content:z.string().trim().min(1).max(20000),mediaType:z.enum(["TEXT","PDF","VIDEO"]),isPinned:z.boolean(),status:z.enum(["DRAFT","PUBLISHED"]).optional()});
+const admin=(session:Session|null)=>Boolean(session?.user?.id && session.user.role==="ADMIN_KELURAHAN");
+const slugify=(value:string)=>value.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,100);
+async function notify(db:Prisma.TransactionClient,id:string,title:string,actor:string) {
+ const users=await db.user.findMany({where:{id:{not:actor}},select:{id:true}});
+ if(users.length) await db.notification.createMany({data:users.map(user=>({recipientId:user.id,type:"ANNOUNCEMENT_PUBLISHED",title:"Pengumuman baru",message:title,announcementId:id}))});
 }
-
-function isFile(value: FormDataEntryValue | null): value is File {
-    return typeof File !== "undefined" && value instanceof File;
+const fail=(error:unknown)=>Response.json({message:error instanceof UploadError?error.message:"Pengumuman belum dapat disimpan."},{status:error instanceof UploadError?error.status:500});
+async function save(request:Request,session:Session,editing:boolean) {
+ const form=await request.formData().catch(()=>null);
+ if(!form) return Response.json({message:"Format tidak valid."},{status:400});
+ const parsed=schema.safeParse({title:form.get("title"),content:form.get("content"),mediaType:form.get("mediaType") || "TEXT",isPinned:["on","true"].includes(String(form.get("isPinned"))),status:form.get("status") ?? undefined});
+ if(!parsed.success || form.has("media")) return Response.json({message:"Data tidak valid. Lampiran harus diunggah langsung ke penyimpanan."},{status:400});
+ const id=String(form.get("id") ?? "");
+ if(editing && !id) return Response.json({message:"ID tidak valid."},{status:400});
+ const existing=editing ? await prisma.announcement.findUnique({where:{id},include:{attachments:{orderBy:{sortOrder:"asc"}}}}) : null;
+ if(editing && !existing) return Response.json({message:"Pengumuman tidak ditemukan."},{status:404});
+ const data=parsed.data;
+ const status=data.status ?? (existing?.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT");
+ const uploadId=String(form.get("mediaUploadId") ?? "");
+ let mediaRef:string|null=null;
+ try {
+  if (form.has("attachmentUploads") || form.has("retainedAttachmentIds")) {
+   if (form.has("mediaUploadId")) throw new UploadError("Format lampiran tidak boleh dicampur.");
+   await saveAnnouncementAttachments(form,session.user.id,existing,{title:data.title,content:data.content,isPinned:data.isPinned,status});
+   return Response.json({message:editing?"Pengumuman diperbarui.":"Pengumuman disimpan."},{status:editing?200:201});
+  }
+  if (existing?.attachments?.length) throw new UploadError("Gunakan editor lampiran terbaru untuk memperbarui pengumuman ini.");
+  if(data.mediaType!=="TEXT") {
+   if(uploadId) { const [file]=await prepareUploads(prisma,[uploadId],session.user.id,data.mediaType); mediaRef=file.path; }
+   else if(existing?.mediaType===data.mediaType && existing.mediaRef) mediaRef=existing.mediaRef;
+   else return Response.json({message:`Lampiran ${data.mediaType} wajib diunggah.`},{status:400});
+  } else if(uploadId) return Response.json({message:"Pengumuman teks tidak memakai lampiran."},{status:400});
+  await prisma.$transaction(async tx=>{
+   if(uploadId && data.mediaType!=="TEXT") await consumeUploads(tx,[uploadId],session.user.id,data.mediaType);
+   const publishedAt=status==="PUBLISHED" ? existing?.status==="PUBLISHED" ? existing.publishedAt : new Date() : existing?.publishedAt ?? null;
+   const fields={title:data.title,content:data.content,mediaType:data.mediaType,isPinned:data.isPinned,status,publishedAt,mediaRef};
+   const item=existing ? await tx.announcement.update({where:{id},data:fields}) : await tx.announcement.create({data:{...fields,slug:`${slugify(data.title)||"pengumuman"}-${crypto.randomUUID()}`,createdById:session.user.id}});
+   if(status==="PUBLISHED" && existing?.status!=="PUBLISHED") await notify(tx,item.id,data.title,session.user.id);
+  });
+  return Response.json({message:editing?"Pengumuman diperbarui.":status==="PUBLISHED"?"Pengumuman diterbitkan.":"Pengumuman disimpan sebagai draft."},{status:editing?200:201});
+ } catch(error) {return fail(error);}
 }
-
-function requireAdmin(session: Session | null) {
-    return Boolean(session?.user?.id && session.user.role === "ADMIN_KELURAHAN");
-}
-
-async function notifyPublished(id: string, title: string, actorId: string) {
-    const recipients = await prisma.user.findMany({ where: { id: { not: actorId } }, select: { id: true } });
-    if (recipients.length) await prisma.notification.createMany({ data: recipients.map((recipient) => ({ recipientId: recipient.id, type: "ANNOUNCEMENT_PUBLISHED" as const, title: "Pengumuman baru", message: title, announcementId: id })) });
-}
-
-async function storeMedia(file: File, mediaType: string): Promise<string> {
-    const rule = mediaRules[mediaType];
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!rule.extensions.includes(extension) || !rule.mimes.includes(file.type) || file.size === 0 || file.size > rule.maxBytes) {
-        throw new Error(`File ${mediaType} tidak valid atau melebihi ukuran.`);
-    }
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const validSignature = mediaType === "PDF" ? bytes.subarray(0, 5).toString() === "%PDF-" : extension === "webm" ? bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])) : bytes.subarray(4, 8).toString() === "ftyp";
-    if (!validSignature || (extension === "webm" && file.type !== "video/webm") || (extension === "mp4" && file.type !== "video/mp4")) throw new Error("Isi atau tipe file lampiran tidak sesuai.");
-    const relativePath = path.join("storage", "announcements", `${randomUUID()}.${extension}`);
-    await mkdir(path.dirname(path.join(process.cwd(), relativePath)), { recursive: true });
-    await writeFile(path.join(process.cwd(), relativePath), bytes, { flag: "wx" });
-    return relativePath.replaceAll(path.sep, "/");
-}
-
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!requireAdmin(session)) return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
-    const announcements = await prisma.announcement.findMany({ orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }] });
-    return NextResponse.json(announcements.map(({ mediaRef, ...item }) => ({ ...item, hasMedia: Boolean(mediaRef) })), { headers: { "Cache-Control": "private, no-store" } });
+ const session=await getServerSession(authOptions);
+ if(!admin(session)) return Response.json({message:"Akses ditolak."},{status:403});
+ const items=await prisma.announcement.findMany({orderBy:[{isPinned:"desc"},{createdAt:"desc"}],include:{attachments:{orderBy:{sortOrder:"asc"}}}});
+ return Response.json(items.map(({mediaRef,attachments,...item})=>({...item,status:item.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",hasMedia:Boolean(mediaRef),attachments:attachmentViews({...item,mediaRef,attachments})})),{headers:{"Cache-Control":"private, no-store"}});
 }
-
-export async function POST(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!requireAdmin(session)) return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
-
-    const formData = await request.formData().catch(() => null);
-    if (!formData) return NextResponse.json({ message: "Format tidak valid." }, { status: 400 });
-
-    const parsed = announcementSchema.safeParse({
-        title: formData.get("title"),
-        content: formData.get("content"),
-        mediaType: formData.get("mediaType") || "TEXT",
-        isPinned: formData.get("isPinned") === "on" || formData.get("isPinned") === "true",
-    });
-    if (!parsed.success) {
-        return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Data tidak valid." }, { status: 400 });
-    }
-
-    let mediaRef: string | null = null;
-    if (parsed.data.mediaType !== "TEXT") {
-        const file = formData.get("media");
-        if (!isFile(file)) {
-            return NextResponse.json({ message: `File ${parsed.data.mediaType} wajib diunggah.` }, { status: 400 });
-        }
-        try {
-            mediaRef = await storeMedia(file, parsed.data.mediaType);
-        } catch {
-            return NextResponse.json({ message: "Lampiran tidak valid atau belum dapat disimpan. Periksa jenis dan ukuran file." }, { status: 400 });
-        }
-    }
-
-    const status = formData.get("status") === "DRAFT" ? "DRAFT" : "PUBLISHED";
-    const baseSlug = slugify(parsed.data.title) || "pengumuman";
-    const slug = `${baseSlug}-${Date.now().toString(36)}`;
-    const announcement = await prisma.announcement.create({
-        data: {
-            title: parsed.data.title,
-            slug,
-            content: parsed.data.content,
-            mediaType: parsed.data.mediaType,
-            mediaRef,
-            isPinned: parsed.data.isPinned,
-            status,
-            publishedAt: status === "PUBLISHED" ? new Date() : null,
-            createdById: session!.user!.id,
-        },
-    });
-
-    if (status === "PUBLISHED") {
-        await notifyPublished(announcement.id, announcement.title, session!.user.id);
-    }
-
-    return NextResponse.json({ message: status === "PUBLISHED" ? "Pengumuman diterbitkan." : "Pengumuman disimpan sebagai draft.", announcement }, { status: 201 });
+export async function POST(request:Request) {
+ const session=await getServerSession(authOptions);
+ if(!admin(session)) return Response.json({message:"Akses ditolak."},{status:403});
+ return save(request,session!,false);
 }
-
-export async function PATCH(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!requireAdmin(session)) return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
-
-    const contentType = request.headers.get("content-type") ?? "";
-
-    if (contentType.includes("multipart/form-data")) {
-        const formData = await request.formData().catch(() => null);
-        if (!formData) return NextResponse.json({ message: "Format tidak valid." }, { status: 400 });
-        const id = typeof formData.get("id") === "string" ? formData.get("id") as string : "";
-        if (!id) return NextResponse.json({ message: "ID tidak valid." }, { status: 400 });
-
-        const parsed = announcementSchema.safeParse({
-            title: formData.get("title"),
-            content: formData.get("content"),
-            mediaType: formData.get("mediaType") || "TEXT",
-            isPinned: formData.get("isPinned") === "on" || formData.get("isPinned") === "true",
-        });
-        if (!parsed.success) {
-            return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Data tidak valid." }, { status: 400 });
-        }
-
-        const existing = await prisma.announcement.findUnique({ where: { id }, select: { mediaType: true, mediaRef: true, status: true, publishedAt: true } });
-        if (!existing) return NextResponse.json({ message: "Pengumuman tidak ditemukan." }, { status: 404 });
-
-        let mediaRef = existing.mediaRef;
-        if (parsed.data.mediaType === "TEXT") {
-            mediaRef = null;
-        } else {
-            const file = formData.get("media");
-            if (isFile(file) && file.size > 0) {
-                try {
-                    mediaRef = await storeMedia(file, parsed.data.mediaType);
-                } catch {
-                    return NextResponse.json({ message: "Lampiran tidak valid atau belum dapat disimpan. Periksa jenis dan ukuran file." }, { status: 400 });
-                }
-            } else if (existing.mediaType !== parsed.data.mediaType || !existing.mediaRef) {
-                return NextResponse.json({ message: `File ${parsed.data.mediaType} wajib diunggah.` }, { status: 400 });
-            }
-        }
-
-        const statusField = formData.get("status");
-        const status = statusField === "PUBLISHED" ? "PUBLISHED" : statusField === "DRAFT" ? "DRAFT" : null;
-
-        await prisma.announcement.update({
-            where: { id },
-            data: {
-                title: parsed.data.title,
-                content: parsed.data.content,
-                mediaType: parsed.data.mediaType,
-                isPinned: parsed.data.isPinned,
-                mediaRef,
-                ...(status === "PUBLISHED" ? { status, publishedAt: existing.status === "PUBLISHED" ? existing.publishedAt : new Date() } : status === "DRAFT" ? { status } : {}),
-            },
-        });
-        if (status === "PUBLISHED" && existing.status !== "PUBLISHED") await notifyPublished(id, parsed.data.title, session!.user.id);
-        return NextResponse.json({ message: "Pengumuman diperbarui." });
-    }
-
-    let body: { id?: string; action?: string };
-    try {
-        body = await request.json();
-    } catch {
-        return NextResponse.json({ message: "Format tidak valid." }, { status: 400 });
-    }
-
-    if (!body.id) return NextResponse.json({ message: "ID tidak valid." }, { status: 400 });
-
-    if (body.action === "publish" || body.action === "unpublish") {
-        const existing = await prisma.announcement.findUnique({ where: { id: body.id }, select: { status: true, publishedAt: true, title: true } });
-        if (!existing) return NextResponse.json({ message: "Pengumuman tidak ditemukan." }, { status: 404 });
-        const status = body.action === "publish" ? "PUBLISHED" : "DRAFT";
-        await prisma.announcement.update({
-            where: { id: body.id },
-            data: { status, ...(body.action === "publish" ? { publishedAt: existing.status === "PUBLISHED" ? existing.publishedAt : new Date() } : {}) },
-        });
-        if (status === "PUBLISHED" && existing.status !== "PUBLISHED") await notifyPublished(body.id, existing.title, session!.user.id);
-        return NextResponse.json({ message: "Status diperbarui." });
-    }
-
-    return NextResponse.json({ message: "Aksi tidak valid." }, { status: 400 });
+export async function PATCH(request:Request) {
+ const session=await getServerSession(authOptions);
+ if(!admin(session)) return Response.json({message:"Akses ditolak."},{status:403});
+ if(request.headers.get("content-type")?.includes("multipart/form-data")) return save(request,session!,true);
+ const parsed=z.object({id:z.string().min(1),action:z.enum(["publish","unpublish"])}).safeParse(await request.json().catch(()=>null));
+ if(!parsed.success) return Response.json({message:"Aksi tidak valid."},{status:400});
+ try {
+  await prisma.$transaction(async tx=>{
+   const existing=await tx.announcement.findUnique({where:{id:parsed.data.id}});
+   if(!existing) throw new UploadError("Pengumuman tidak ditemukan.",404);
+   const publish=parsed.data.action==="publish";
+   await tx.announcement.update({where:{id:existing.id},data:{status:publish?"PUBLISHED":"DRAFT",...(publish?{publishedAt:existing.status==="PUBLISHED"?existing.publishedAt:new Date()}: {})}});
+   if(publish && existing.status!=="PUBLISHED") await notify(tx,existing.id,existing.title,session!.user.id);
+  });
+  return Response.json({message:"Status diperbarui."});
+ } catch(error) {return fail(error);}
 }
-
-export async function DELETE(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!requireAdmin(session)) return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
-    let body: { id?: string };
-    try {
-        body = await request.json();
-    } catch {
-        return NextResponse.json({ message: "Format tidak valid." }, { status: 400 });
-    }
-    if (!body.id) return NextResponse.json({ message: "ID tidak valid." }, { status: 400 });
-    await prisma.announcement.delete({ where: { id: body.id } });
-    return NextResponse.json({ message: "Pengumuman dihapus." });
+export async function DELETE(request:Request) {
+ const session=await getServerSession(authOptions);
+ if(!admin(session)) return Response.json({message:"Akses ditolak."},{status:403});
+ const parsed=z.object({id:z.string().min(1)}).safeParse(await request.json().catch(()=>null));
+ if(!parsed.success) return Response.json({message:"ID tidak valid."},{status:400});
+ try {await prisma.announcement.delete({where:{id:parsed.data.id}});return Response.json({message:"Pengumuman dihapus."});} catch {return Response.json({message:"Pengumuman tidak ditemukan."},{status:404});}
 }

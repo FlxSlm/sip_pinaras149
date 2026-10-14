@@ -63,6 +63,7 @@ html {
 }
 
 body {
+  overflow-x: clip;
   background: var(--surface);
   color: var(--ink);
   font-family: var(--sipp-font);
@@ -70,6 +71,22 @@ body {
   text-rendering: optimizeLegibility;
   line-height: 1.6;
   min-height: 100%;
+}
+
+.login-page { position: relative; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: clamp(1.25rem, 4vw, 3rem); }
+.page-enter { min-width: 0; animation: sipp-page-enter 220ms ease-out both; }
+.org-tree { margin-top: 2rem; }
+.org-level { position: relative; padding-top: 2rem; margin-top: 1rem; }
+.org-level::before { content: ""; position: absolute; width: 1px; height: 2rem; background: var(--line); top: -1rem; left: 50%; }
+.org-card { height: 100%; overflow: hidden; border: 1px solid var(--line); border-radius: .875rem; background: white; box-shadow: var(--shadow-card); text-align: center; }
+.org-person { padding: 1rem .75rem; overflow-wrap: anywhere; }
+.org-person + .org-person { border-top: 1px solid var(--line); background: var(--surface); }
+.org-position { font-size: .8rem; line-height: 1.5; color: var(--brand-dark); }
+@keyframes sipp-page-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .page-enter, .animate-pulse { animation: none !important; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
 
 @layer base {
@@ -179,7 +196,7 @@ a:active {
 .nature-hero {
   background-image:
     linear-gradient(170deg, rgba(8, 42, 60, 0.92) 0%, rgba(12, 58, 82, 0.82) 45%, rgba(42, 143, 98, 0.35) 100%),
-    url("/images/panorama-pinaras.png");
+    url("/images/panorama-pinaras.webp");
   background-size: cover;
   background-position: center 40%;
 }
@@ -187,7 +204,7 @@ a:active {
 .nature-footer {
   background-image:
     linear-gradient(180deg, rgba(12, 58, 82, 0.97) 0%, rgba(10, 48, 68, 0.94) 100%),
-    url("/images/panorama-pinaras.png");
+    url("/images/panorama-pinaras.webp");
   background-size: cover;
   background-position: center;
 }
@@ -196,7 +213,7 @@ a:active {
 .sidebar-bg {
   background-image:
     linear-gradient(180deg, #064c7b 0%, rgb(6 63 106 / 96%) 36%, rgb(6 56 91 / 35%) 68%, rgb(3 43 62 / 90%) 100%),
-    url("/images/panorama-pinaras.png");
+    url("/images/panorama-pinaras.webp");
   background-size: cover;
   background-position: center bottom;
 }
@@ -204,7 +221,7 @@ a:active {
 .dashboard-hero {
   background-image:
     linear-gradient(100deg, rgb(6 56 100 / 96%) 0%, rgb(8 89 141 / 85%) 48%, rgb(8 89 141 / 15%) 100%),
-    url("/images/panorama-pinaras.png");
+    url("/images/panorama-pinaras.webp");
   background-size: cover;
   background-position: center 48%;
 }
@@ -214,7 +231,7 @@ a:active {
 }
 
 @media (max-width: 639px) {
-  .dashboard-hero { background-image: linear-gradient(100deg, rgb(6 56 100 / 96%), rgb(8 89 141 / 80%)), url("/images/panorama-pinaras.png"); }
+  .dashboard-hero { background-image: linear-gradient(100deg, rgb(6 56 100 / 96%), rgb(8 89 141 / 80%)), url("/images/panorama-pinaras.webp"); }
 }
 
 @keyframes rise {

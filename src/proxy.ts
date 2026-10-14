@@ -4,10 +4,13 @@ import type { NextRequest } from "next/server";
 import { getRoleHome, isUserRole } from "@/lib/authorization";
 
 export async function proxy(request: NextRequest) {
-    const token = await getToken({
-        req: request,
-        secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-    });
+    let token;
+    try {
+        token = await getToken({
+            req: request,
+            secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+        });
+    } catch { token = null; }
     const pathname = request.nextUrl.pathname;
 
     if (pathname.startsWith("/petugas")) {

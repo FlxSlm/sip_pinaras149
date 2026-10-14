@@ -9,12 +9,12 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { id: true, name: true, email: true, username: true, image: true, customImage: true, role: true },
+        select: { id: true, name: true, email: true, username: true, image: true, customImage: true, role: true, updatedAt: true },
     });
     if (!user) return NextResponse.json({ message: "Tidak ditemukan." }, { status: 404 });
 
     return NextResponse.json({
         id: user.id, name: user.name, email: user.email, username: user.username, role: user.role,
-        image: user.customImage ? "/api/profile/photo" : user.image,
+        image: user.customImage ? `/api/profile/photo?v=${user.updatedAt.getTime()}` : user.image,
     }, { headers: { "Cache-Control": "private, no-store" } });
 }

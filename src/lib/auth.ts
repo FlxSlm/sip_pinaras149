@@ -3,7 +3,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/password";
+import { verifyAdminLogin } from "@/lib/admin-login";
 import { getAuthRedirectUrl, isUserRole } from "@/lib/authorization";
 
 const oauthProviders = [
@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 const username = typeof credentials?.username === "string" ? credentials.username.trim().toLowerCase() : "";
                 const password = typeof credentials?.password === "string" ? credentials.password : "";
-                if (!username || !password) {
+                if (!username || !password || username.length > 120 || password.length > 256) {
                     return null;
                 }
 
@@ -52,11 +52,16 @@ export const authOptions: NextAuthOptions = {
                 if (
                     !user ||
                     user.role !== "ADMIN_KELURAHAN" ||
-                    !user.passwordHash ||
-                    !verifyPassword(password, user.passwordHash)
+                    !user.passwordHash
                 ) {
                     return null;
                 }
+
+                let verification;
+                try { verification = await verifyAdminLogin(prisma, user.id, password, user.passwordHash); }
+                catch { throw new Error("Configuration"); }
+                if (verification.blockedUntil) throw new Error(`AdminLoginLocked:${verification.blockedUntil.getTime()}`);
+                if (!verification.accepted) throw new Error(`AdminLoginInvalid:${verification.attemptsRemaining}`);
 
                 return {
                     id: user.id,
@@ -68,9 +73,9 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user, account }) {
+        async signIn({ user, account, profile }) {
             if (account?.type === "oauth") {
-                return account.provider === "google" && (user.role === "WARGA" || !user.role);
+                return account.provider === "google" && (profile as { email_verified?: boolean } | undefined)?.email_verified !== false && (user.role === "WARGA" || !user.role);
             }
             return account?.type === "credentials" && user.role === "ADMIN_KELURAHAN";
         },

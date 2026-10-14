@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { uploadPrivateFile } from "@/lib/upload-client";
+import { imageFileAccept, isHeicImage } from "@/lib/image-files";
 
 export function ProfilePhotoForm({ imageUrl, name, hasCustomPhoto }: { imageUrl: string | null; name: string; hasCustomPhoto: boolean }) {
+    const router = useRouter();
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState(false);
     const [confirming, setConfirming] = useState(false);
@@ -14,12 +18,11 @@ export function ProfilePhotoForm({ imageUrl, name, hasCustomPhoto }: { imageUrl:
         setPending(true);
         setMessage("");
         try {
-            const form = new FormData();
-            form.set("photo", file);
-            const response = await fetch("/api/profile/photo", { method: "POST", body: form });
+            const uploadId = await uploadPrivateFile(file, "PROFILE");
+            const response = await fetch("/api/profile/photo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uploadId }) });
             if (!response.ok) throw new Error("Upload failed");
             setMessage("Foto profil diperbarui.");
-            window.location.reload();
+            window.dispatchEvent(new Event("sipp:profile-changed")); router.refresh(); setPending(false);
         } catch {
             setMessage("Gagal mengunggah foto.");
             setPending(false);
@@ -33,7 +36,7 @@ export function ProfilePhotoForm({ imageUrl, name, hasCustomPhoto }: { imageUrl:
         const response = await fetch("/api/profile/photo", { method: "DELETE" });
         const result = (await response.json()) as { message?: string };
         setMessage(result.message ?? (response.ok ? "Foto profil dihapus." : "Gagal menghapus foto."));
-        if (response.ok) window.location.reload();
+        if (response.ok) { window.dispatchEvent(new Event("sipp:profile-changed")); router.refresh(); }
         } catch { setMessage("Foto belum dapat dihapus. Periksa koneksi lalu coba kembali."); }
         setPending(false);
         setConfirming(false);
@@ -52,7 +55,7 @@ export function ProfilePhotoForm({ imageUrl, name, hasCustomPhoto }: { imageUrl:
                 <div className="flex flex-wrap gap-2">
                     <label className="cursor-pointer rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-bold text-white">
                         {pending ? "Mengunggah..." : "Ganti foto profil"}
-                        <input type="file" disabled={pending} accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) { setMessage("Pilih JPG, PNG, atau WEBP maksimal 5 MB."); return; } setSelectedFile(file); }} />
+                        <input type="file" disabled={pending} accept={imageFileAccept} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; if ((!isHeicImage(file) && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) || !file.size || file.size > 5 * 1024 * 1024) { setMessage("Pilih JPG, PNG, WEBP, atau HEIC maksimal 5 MB."); return; } setSelectedFile(file); }} />
                     </label>
                     {hasCustomPhoto && (
                         <button type="button" onClick={() => setConfirming(true)} disabled={pending} className="rounded-lg border border-[var(--danger)] px-4 py-2 text-sm font-bold text-[var(--danger)] disabled:opacity-60">
@@ -60,7 +63,7 @@ export function ProfilePhotoForm({ imageUrl, name, hasCustomPhoto }: { imageUrl:
                         </button>
                     )}
                 </div>
-                <p className="text-xs text-[var(--muted)]">JPG, PNG, atau WEBP · maksimal 5 MB</p>
+                <p className="text-xs text-[var(--muted)]">JPG, PNG, WEBP, atau HEIC · maksimal 5 MB</p>
                 {message && <p className="text-sm text-[var(--muted)]" role="status">{message}</p>}
             </div>
             {confirming && (

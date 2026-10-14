@@ -1,17 +1,15 @@
-import { getServerSession } from "next-auth";
+import { getDashboardSession } from "@/lib/dashboard-session";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
-import { DashboardShell } from "@/components/dashboard-shell";
 
 export const dynamic = "force-dynamic";
 
 const priorityLabel: Record<string, string> = { NORMAL: "Normal", PERLU_PERHATIAN: "Perlu perhatian" };
 
 export default async function AdminComplaintsPage() {
-    const session = await getServerSession(authOptions);
+    const session = await getDashboardSession();
     if (!session) redirect("/login");
     if (session.user.role !== "ADMIN_KELURAHAN") redirect("/warga");
 
@@ -24,7 +22,7 @@ export default async function AdminComplaintsPage() {
     const done = complaints.filter((complaint) => complaint.status === "SELESAI" || complaint.status === "DITOLAK");
 
     return (
-        <DashboardShell role="admin" userName={session.user.name ?? session.user.email ?? "Admin Kelurahan"}>
+        <>
             <div className="mx-auto max-w-6xl">
                 <h1 className="text-2xl font-extrabold text-[var(--ink)]">Pengaduan</h1>
 
@@ -74,6 +72,6 @@ export default async function AdminComplaintsPage() {
                     )}
                 </section>
             </div>
-        </DashboardShell>
+        </>
     );
 }

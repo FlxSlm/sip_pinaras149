@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAuthErrorMessage } from "./auth-errors";
+import { getAuthErrorMessage, getAuthAttemptsRemaining, getAuthLockUntil } from "./auth-errors";
 import { hashPassword, verifyPassword } from "./password";
 
 describe("safe authentication errors", () => {
@@ -13,6 +13,16 @@ describe("safe authentication errors", () => {
         expect(typeof message).toBe("string");
         expect(message).toContain("Login tidak berhasil");
         expect(message).not.toContain(code);
+    });
+    it.each([1, 2, 3, 4])("mengambil sisa %i percobaan dari hasil server", (count) => {
+        expect(getAuthAttemptsRemaining(`AdminLoginInvalid:${count}`)).toBe(count);
+        expect(getAuthErrorMessage(`AdminLoginInvalid:${count}`)).toBe("Username atau password tidak valid.");
+    });
+    it("menampilkan nol ketika terkunci dan menolak kode penghitung yang tidak valid", () => {
+        const until = Date.UTC(2026, 9, 14);
+        expect(getAuthAttemptsRemaining(`AdminLoginLocked:${until}`)).toBe(0);
+        expect(getAuthLockUntil(`AdminLoginLocked:${until}`)).toBe(until);
+        for (const code of [undefined, "AdminLoginInvalid:5", "AdminLoginInvalid:-1", "AdminLoginInvalid:1.5", "AdminLoginLocked:NaN"]) expect(getAuthAttemptsRemaining(code)).toBeNull();
     });
 });
 describe("password hash integrity", () => {

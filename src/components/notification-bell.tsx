@@ -9,14 +9,19 @@ export function NotificationBell({ href }: { href: string }) {
 
     useEffect(() => {
         let active = true;
-        fetch("/api/notifications", { cache: "no-store" })
+        const refresh = () => fetch("/api/notifications", { cache: "no-store" })
             .then((response) => response.ok ? response.json() as Promise<{ unreadCount: number }> : null)
             .then((result) => {
                 if (active && result) setUnreadCount(result.unreadCount);
             })
             .catch(() => undefined);
+        void refresh();
+        const timer = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 60000);
+        window.addEventListener("focus", refresh);
+        window.addEventListener("sipp:notifications-changed", refresh);
         return () => {
             active = false;
+            window.clearInterval(timer); window.removeEventListener("focus", refresh); window.removeEventListener("sipp:notifications-changed", refresh);
         };
     }, []);
 

@@ -28,10 +28,10 @@ export function DonutChart({ data, title = "Distribusi pengaduan" }: { data: Cha
                 </div> : <svg viewBox="0 0 200 200" className="w-full max-w-52" aria-hidden="true">
                     {total === 0 ? <circle cx="100" cy="100" r="74" fill={view === "pie" ? "var(--surface-2)" : "none"} stroke="var(--surface-2)" strokeWidth={view === "pie" ? 0 : 30} /> :
                         segments.filter((s) => s.value > 0).map((item) => {
-                            if (view === "doughnut") return <circle key={item.label} cx="100" cy="100" r="74" fill="none" stroke={item.color} strokeWidth="30" strokeDasharray={item.ratio * circumference + " " + circumference} strokeDashoffset={-item.start * circumference} transform="rotate(-90 100 100)"><title>{item.label}: {item.value}</title></circle>;
-                            if (item.ratio === 1) return <circle key={item.label} cx="100" cy="100" r="89" fill={item.color}><title>{item.label}: {item.value}</title></circle>;
+                            if (view === "doughnut") return <circle key={item.label} cx="100" cy="100" r="74" fill="none" stroke={item.color} strokeWidth="30" strokeDasharray={item.ratio * circumference + " " + circumference} strokeDashoffset={-item.start * circumference} transform="rotate(-90 100 100)"></circle>;
+                            if (item.ratio === 1) return <circle key={item.label} cx="100" cy="100" r="89" fill={item.color}></circle>;
                             const point = (fraction: number) => [100 + 89 * Math.cos(fraction * 2 * Math.PI - Math.PI / 2), 100 + 89 * Math.sin(fraction * 2 * Math.PI - Math.PI / 2)].join(" ");
-                            return <path key={item.label} d={"M 100 100 L " + point(item.start) + " A 89 89 0 " + (item.ratio > .5 ? 1 : 0) + " 1 " + point(item.end) + " Z"} fill={item.color} stroke="white" strokeWidth="1"><title>{item.label}: {item.value}</title></path>;
+                            return <path key={item.label} d={"M 100 100 L " + point(item.start) + " A 89 89 0 " + (item.ratio > .5 ? 1 : 0) + " 1 " + point(item.end) + " Z"} fill={item.color} stroke="white" strokeWidth="1"></path>;
                         })}
                     {view === "doughnut" && <><text x="100" y="99" textAnchor="middle" fill="var(--ink)" fontSize="28" fontWeight="700">{total}</text><text x="100" y="122" textAnchor="middle" fill="var(--muted)" fontSize="14">Total laporan</text></>}
                 </svg>}

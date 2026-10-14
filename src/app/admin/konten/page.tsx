@@ -1,25 +1,25 @@
-import { getServerSession } from "next-auth";
+import { getDashboardSession } from "@/lib/dashboard-session";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
-import { CmsEditor } from "@/components/cms-editor";
-import { DashboardShell } from "@/components/dashboard-shell";
+import { StructureEditor } from "@/components/structure-editor";
+import { getOrganization } from "@/lib/organization-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminContentPage() {
-    const session = await getServerSession(authOptions);
+    const session = await getDashboardSession();
     if (!session) redirect("/login");
     if (session.user.role !== "ADMIN_KELURAHAN") redirect("/warga");
+    const { publicMembers } = await getOrganization();
 
     return (
-        <DashboardShell role="admin" userName={session.user.name ?? session.user.email ?? "Admin Kelurahan"}>
+        <>
             <div className="mx-auto max-w-5xl">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-[var(--ink)]">Konten Landing Page</h1>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Kelola konten yang tampil di halaman utama. Perubahan langsung terlihat tanpa perlu deploy ulang.</p>
+                    <h1 className="text-2xl font-extrabold text-[var(--ink)]">Struktur Kelurahan</h1>
+                    <p className="mt-1 text-sm text-[var(--muted)]">Perbarui nama dan foto pejabat. Perubahan tampil pada struktur di portal publik.</p>
                 </div>
-                <CmsEditor />
+                <StructureEditor initialMembers={publicMembers} />
             </div>
-        </DashboardShell>
+        </>
     );
 }

@@ -5,6 +5,10 @@ const { getToken } = vi.hoisted(() => ({ getToken: vi.fn() }));
 vi.mock("next-auth/jwt", () => ({ getToken }));
 beforeEach(() => { getToken.mockReset(); });
 describe("dashboard authorization", () => {
+    it("malformed token fails closed without bypassing dashboard access", async () => {
+        getToken.mockRejectedValue(new Error("Malformed authorization"));
+        expect(new URL((await proxy(new NextRequest("https://preview.example/admin"))).headers.get("location")!).pathname).toBe("/login");
+    });
     it("guest dikirim ke login dan callback/query dipertahankan", async () => {
         getToken.mockResolvedValue(null);
         const response = await proxy(new NextRequest("http://localhost/warga/pengaduan?status=MENUNGGU"));

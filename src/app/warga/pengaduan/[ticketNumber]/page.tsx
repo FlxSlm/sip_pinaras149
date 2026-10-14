@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
+import { neighborhoodLabel } from "@/lib/neighborhoods";
+import { getDashboardSession } from "@/lib/dashboard-session";
 import { redirect, notFound } from "next/navigation";
 import { EvidenceGallery } from "@/components/evidence-gallery";
 import Link from "next/link";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
-import { DashboardShell } from "@/components/dashboard-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +20,7 @@ const actionLabel: Record<string, string> = {
 const priorityLabel: Record<string, string> = { NORMAL: "Normal", PERLU_PERHATIAN: "Perlu perhatian" };
 
 export default async function WargaComplaintDetailPage({ params }: { params: Promise<{ ticketNumber: string }> }) {
-    const session = await getServerSession(authOptions);
+    const session = await getDashboardSession();
     if (!session) redirect("/login");
     if (session.user.role !== "WARGA") redirect("/admin");
 
@@ -35,6 +34,7 @@ export default async function WargaComplaintDetailPage({ params }: { params: Pro
             category: true,
             description: true,
             location: true,
+            neighborhood: true,
             status: true,
             priority: true,
             officialResponse: true,
@@ -50,7 +50,7 @@ export default async function WargaComplaintDetailPage({ params }: { params: Pro
     if (!complaint) notFound();
 
     return (
-        <DashboardShell role="warga" userName={session.user.name ?? session.user.email ?? "Warga"}>
+        <>
             <div className="mx-auto max-w-3xl">
                 <Link href="/warga/pengaduan" className="text-sm font-bold text-[var(--brand)]">← Kembali ke riwayat</Link>
 
@@ -65,6 +65,7 @@ export default async function WargaComplaintDetailPage({ params }: { params: Pro
                     <h1 className="mt-2 text-2xl font-extrabold text-[var(--ink)]">{complaint.title}</h1>
                     <p className="mt-2 text-sm text-[var(--muted)]">{complaint.category} · {complaint.createdAt.toLocaleDateString("id-ID")}</p>
                     {complaint.location && <p className="mt-2 text-sm text-[var(--muted)]">Lokasi: {complaint.location}</p>}
+                            <p className="mt-2 text-sm text-[var(--muted)]">Lingkungan: {neighborhoodLabel(complaint.neighborhood)}</p>
 
                     <h2 className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-[var(--muted)]">Deskripsi</h2>
                     <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--ink)]">{complaint.description}</p>
@@ -99,6 +100,6 @@ export default async function WargaComplaintDetailPage({ params }: { params: Pro
                     </ol>
                 </section>
             </div>
-        </DashboardShell>
+        </>
     );
 }

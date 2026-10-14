@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PINARAS_AREA, PINARAS_HISTORY } from "@/lib/pinaras-information";
 
 export type LandingStatistic = {
     id: string;
@@ -51,7 +52,7 @@ const defaultSiteContent: Record<string, Record<string, unknown>> = {
     },
     profil: {
         shortDesc: "Kelurahan Pinaras adalah salah satu dari 12 kelurahan di Kecamatan Tomohon Selatan, Kota Tomohon, Sulawesi Utara.",
-        longDesc: "Kelurahan Pinaras memiliki luas wilayah 3,98 km², berada pada ketinggian sekitar 661 mdpl, dan terdiri atas 8 Satuan Lingkungan Setempat.",
+        longDesc: "Kelurahan Pinaras memiliki luas wilayah 3,96 km², berada pada ketinggian sekitar 661 mdpl, dan terdiri atas 8 Satuan Lingkungan Setempat.",
         sejarah: null,
         visi: null,
         misi: null,
@@ -82,6 +83,8 @@ export async function getLandingContent() {
 
     const hero = { ...defaultSiteContent.hero, ...(siteContent.hero ?? {}) };
     const profil = { ...defaultSiteContent.profil, ...(siteContent.profil ?? {}) };
+    profil.sejarah = PINARAS_HISTORY;
+    if (typeof profil.longDesc === "string") profil.longDesc = profil.longDesc.replace(/3[,.]98\s*km[²2]/g, "3,96 km²");
     const lokasi = { ...defaultSiteContent.lokasi, ...(siteContent.lokasi ?? {}) };
     const kontak = { ...defaultSiteContent.kontak, ...(siteContent.kontak ?? {}) };
 
@@ -90,7 +93,7 @@ export async function getLandingContent() {
         profil,
         lokasi,
         kontak,
-        statistics: statistics as unknown as LandingStatistic[],
+        statistics: (statistics as unknown as LandingStatistic[]).map((item) => /luas wilayah/i.test(item.label) ? { ...item, value: PINARAS_AREA, unit: "km²", source: "Pembaruan informasi kelurahan", sourceYear: null, sourcePage: null } : item),
         potentials: potentials as unknown as LandingPotential[],
         facilities: facilities as unknown as LandingFacility[],
         gallery: gallery as unknown as LandingGallery[],

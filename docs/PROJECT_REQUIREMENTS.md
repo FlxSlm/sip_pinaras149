@@ -1,5 +1,8 @@
 # SIPP V2 — Project Requirements
 
+## Pembaruan 14 Oktober 2026
+Arahan pengguna terbaru pada [USER_REQUEST_2026_10_14.md](USER_REQUEST_2026_10_14.md) menggantikan bagian CMS di bawah: hanya struktur kelurahan yang dapat diedit admin. Data konten lama tetap dipertahankan. Nama produk SIPP, username admin `kkt149unsrat@pinaras.com`, pilihan lokasi Lingkungan 1–8/Tidak Tahu, foto HEIC, lampiran pengumuman lebih dari satu, dan jeda login bertingkat menjadi target saat ini.
+
 ## 1. Ringkasan
 SIPP (Sistem Informasi Peduli Pinaras) adalah portal digital Kelurahan Pinaras, Kecamatan Tomohon Selatan, Kota Tomohon. SIPP menggabungkan portal informasi publik kelurahan, CMS konten, pengumuman, dan sistem pengaduan warga.
 

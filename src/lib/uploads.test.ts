@@ -1,0 +1,20 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { prepareUploads, consumeUploads } from "./uploads";
+import { validUploadMetadata, validMediaSignature, uploadRoleAllowed } from "./upload-rules";
+const m=vi.hoisted(()=>({head:vi.fn(),prefix:vi.fn(),find:vi.fn(),consume:vi.fn()}));
+vi.mock("@vercel/blob",()=>({head:m.head}));
+vi.mock("@/lib/blob-storage",()=>({readBlobPrefix:m.prefix,isPrivateBlobReference:(ref:string)=>ref.includes(".private.blob.vercel-storage.com")}));
+const db={uploadIntent:{findFirst:m.find}} as unknown as Parameters<typeof prepareUploads>[0];
+const tx={uploadIntent:{updateMany:m.consume}} as unknown as Parameters<typeof consumeUploads>[0];
+beforeEach(()=>{vi.clearAllMocks();m.find.mockResolvedValue({pathname:"sipp/evidence/test.png",mimeType:"image/png",sizeBytes:16});m.head.mockResolvedValue({pathname:"sipp/evidence/test.png",contentType:"image/png",size:16,url:"https://test.private.blob.vercel-storage.com/sipp/evidence/test.png"});m.prefix.mockResolvedValue(new Uint8Array([137,80,78,71,13,10,26,10]));m.consume.mockResolvedValue({count:1});});
+describe("persistent upload validation and ownership",()=>{
+ it("checks owner, purpose, expiry, and unused state before accessing Blob",async()=>{expect(await prepareUploads(db,["id"],"owner","EVIDENCE")).toHaveLength(1);expect(m.find.mock.calls[0][0].where).toMatchObject({id:"id",ownerId:"owner",kind:"EVIDENCE",consumedAt:null,expiresAt:{gt:expect.any(Date)}});});
+ it.each(["foreign","expired","replayed"])("rejects %s intent before Blob access",async()=>{m.find.mockResolvedValue(null);await expect(prepareUploads(db,["id"],"owner","EVIDENCE")).rejects.toThrow();expect(m.head).not.toHaveBeenCalled();});
+ it("does not accept a duplicate receipt",async()=>{await expect(prepareUploads(db,["id","id"],"owner","EVIDENCE")).rejects.toThrow();expect(m.head).not.toHaveBeenCalled();});
+ it.each([{size:17},{contentType:"video/mp4"},{pathname:"other"},{url:"https://test.public.blob.vercel-storage.com/file"}])("rejects changed metadata/public object %j",async(change)=>{m.head.mockResolvedValue({...await m.head(),...change});await expect(prepareUploads(db,["id"],"owner","EVIDENCE")).rejects.toThrow();});
+ it("rejects forged MIME with invalid bytes",async()=>{m.prefix.mockResolvedValue(new Uint8Array([1,2,3]));await expect(prepareUploads(db,["id"],"owner","EVIDENCE")).rejects.toThrow("Isi file");});
+ it("claim races cannot reuse an upload",async()=>{m.consume.mockResolvedValue({count:0});await expect(consumeUploads(tx,["id"],"owner","EVIDENCE")).rejects.toThrow();expect(m.consume.mock.calls[0][0].where).toMatchObject({ownerId:"owner",consumedAt:null});});
+ it("validates MIME, extension, exact nonzero size and ceilings",()=>{expect(validUploadMetadata("VIDEO","clip.webm","video/webm",50*1024*1024)).toBe(true);expect(validUploadMetadata("PDF","clip.pdf","application/pdf",10*1024*1024+1)).toBe(false);expect(validUploadMetadata("PROFILE","p.exe","image/png",16)).toBe(false);expect(validUploadMetadata("EVIDENCE","p.png","image/png",0)).toBe(false);});
+ it("keeps admin announcements and warga evidence separated",()=>{expect(uploadRoleAllowed("VIDEO","WARGA")).toBe(false);expect(uploadRoleAllowed("EVIDENCE","ADMIN_KELURAHAN")).toBe(false);expect(uploadRoleAllowed("PROFILE","WARGA")).toBe(true);});
+ it("recognizes PDF, MP4, WEBM and rejects wrong signatures",()=>{expect(validMediaSignature("application/pdf",new TextEncoder().encode("%PDF-1.4"))).toBe(true);expect(validMediaSignature("video/mp4",new TextEncoder().encode("0000ftyp"))).toBe(true);expect(validMediaSignature("video/webm",new Uint8Array([26,69,223,163]))).toBe(true);expect(validMediaSignature("image/webp",new Uint8Array([1,2]))).toBe(false);});
+});

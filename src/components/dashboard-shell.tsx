@@ -27,7 +27,7 @@ const menus: Record<DashboardRole, MenuItem[]> = {
         { label: "Dashboard", href: "/admin", icon: "dashboard" },
         { label: "Pengaduan", href: "/admin/pengaduan", icon: "complaint" },
         { label: "Pengumuman", href: "/admin/pengumuman", icon: "announcement" },
-        { label: "Konten Kelurahan", href: "/admin/konten", icon: "content" },
+        { label: "Struktur Kelurahan", href: "/admin/konten", icon: "content" },
         { label: "Profil", href: "/admin/profil", icon: "profile" },
     ],
 };
@@ -38,20 +38,22 @@ function isActive(pathname: string, href: string, basePath: string): boolean {
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function DashboardShell({ role, userName, children }: { role: DashboardRole; userName: string; children: ReactNode }) {
+export function DashboardShell({ role, userName, children, initialAccount }: { role: DashboardRole; userName: string; children: ReactNode; initialAccount?: Account }) {
     const pathname = usePathname();
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [account, setAccount] = useState<Account | null>(null);
+    const [account, setAccount] = useState<Account | null>(initialAccount ?? null);
     const drawerId = useId();
 
     useEffect(() => {
         let active = true;
-        fetch("/api/me", { cache: "no-store" })
+        const refreshAccount = () => fetch("/api/me", { cache: "no-store" })
             .then((response) => response.ok ? response.json() as Promise<Account> : null)
             .then((result) => { if (active && result) setAccount(result); })
             .catch(() => undefined);
-        return () => { active = false; };
-    }, []);
+        if (!initialAccount) void refreshAccount();
+        window.addEventListener("sipp:profile-changed", refreshAccount);
+        return () => { active = false; window.removeEventListener("sipp:profile-changed", refreshAccount); };
+    }, [initialAccount]);
 
     useEffect(() => {
         const desktop = window.matchMedia("(min-width: 1024px)");
@@ -80,7 +82,7 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
                     <Link href={basePath} onClick={() => setDrawerOpen(false)} className="flex min-w-0 flex-1 items-center gap-3">
                         <Image src="/images/logo tomohon.png" alt="Logo Kota Tomohon" width={44} height={44} className="size-11 shrink-0 object-contain" />
                         <div className="min-w-0">
-                            <p className="text-lg font-bold tracking-wide">SIPP PINARAS</p>
+                            <p className="text-lg font-bold tracking-wide">SIPP</p>
                             <p className="mt-1 text-xs leading-5 text-white/80">Sistem Informasi Peduli Pinaras</p>
                             <p className="text-xs text-white/80">Kelurahan Pinaras</p>
                         </div>
@@ -148,7 +150,7 @@ export function DashboardShell({ role, userName, children }: { role: DashboardRo
                 </main>
                 <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-white/60 px-4 py-5 text-xs leading-5 text-[var(--muted)] sm:px-6 xl:px-8">
                     <p className="flex items-start gap-2"><Icon name="location" className="mt-0.5 size-4" /><span>Kelurahan Pinaras, Kecamatan Tomohon Selatan, Kota Tomohon</span></p>
-                    <p className="flex items-center gap-2"><span>Bersama Membangun Pinaras yang Lebih Baik</span><Icon name="leaf" className="size-4" /></p>
+                    <p className="ml-auto text-right">© Dibuat oleh KKT 149 UNSRAT Pinaras</p>
                 </footer>
             </div>
         </div>

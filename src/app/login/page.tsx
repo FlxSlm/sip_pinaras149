@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import LoginForm from "@/components/login-form";
 import { authOptions } from "@/lib/auth";
 import { getLoginDestination, isUserRole } from "@/lib/authorization";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { getAuthErrorMessage, getAuthLockUntil, getAuthAttemptsRemaining } from "@/lib/auth-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -16,5 +16,5 @@ export default async function LoginPage({ searchParams }: {
     if (session?.user.id && isUserRole(session.user.role)) {
         redirect(getLoginDestination(session.user.role, callbackUrl));
     }
-    return <LoginForm callbackUrl={callbackUrl} initialError={getAuthErrorMessage(params.error)} />;
+    return <LoginForm callbackUrl={callbackUrl} initialError={getAuthErrorMessage(params.error)} initialBlockedUntil={getAuthLockUntil(params.error)} initialAttemptsRemaining={getAuthAttemptsRemaining(params.error)} />;
 }

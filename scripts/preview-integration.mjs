@@ -1,0 +1,74 @@
+import nextEnv from "@next/env";
+import { readFile } from "node:fs/promises";
+import { randomBytes, randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
+import { encode } from "next-auth/jwt";
+const { loadEnvConfig } = nextEnv;
+loadEnvConfig(process.cwd(), true, {info(){},error(){}});
+const target=(await readFile(".deployment-qa/test-database-url","utf8")).trim();
+const url=new URL(target);
+if(!["localhost","127.0.0.1","[::1]"].includes(url.hostname) || !/^\/sipp_preview_audit_[a-f0-9]+$/.test(url.pathname)) throw new Error("Unsafe target");
+process.env.DATABASE_URL=target;process.env.DIRECT_URL=target;
+process.env.NODE_ENV="production";
+const origin="http://127.0.0.1:3001";process.env.NEXTAUTH_URL=origin;
+const {prisma}=await import("../src/lib/prisma.ts");
+const {authOptions}=await import("../src/lib/auth.ts");
+const {seedAdmin}=await import("../prisma/seed-admin.ts");
+const {verifyPassword}=await import("../src/lib/password.ts");
+const {consumeUploads}=await import("../src/lib/uploads.ts");
+const checks={};
+let server;
+try {
+ const password=randomBytes(24).toString("base64url");
+ const initial=await seedAdmin(prisma,password);
+ const repeat=await seedAdmin(prisma,undefined);
+ const admin=await prisma.user.findUnique({where:{username:"kkt149unsrat@pinaras.com"}});
+ checks.adminCreatedOnlyOnce=initial.created && !repeat.created;
+ checks.adminHashVerified=verifyPassword(password,admin.passwordHash);
+ const user=await authOptions.adapter.createUser({name:"Synthetic warga",email:"preview-audit@example.invalid",emailVerified:new Date(),image:null});
+ await authOptions.adapter.linkAccount({userId:user.id,type:"oauth",provider:"google",providerAccountId:randomUUID()});
+ const account=await prisma.account.findFirst({where:{userId:user.id}});
+ const warga=await authOptions.adapter.getUserByAccount({provider:"google",providerAccountId:account.providerAccountId});
+ checks.googleAdapterCreatesAndLinksWarga=warga.role==="WARGA" && warga.id===user.id;
+ const intent=await prisma.uploadIntent.create({data:{ownerId:user.id,kind:"EVIDENCE",pathname:"sipp/evidence/"+randomUUID()+".png",mimeType:"image/png",sizeBytes:16,expiresAt:new Date(Date.now()+60000)}});
+ const claims=await Promise.allSettled([prisma.$transaction(tx=>consumeUploads(tx,[intent.id],user.id,"EVIDENCE")),prisma.$transaction(tx=>consumeUploads(tx,[intent.id],user.id,"EVIDENCE"))]);
+ checks.uploadClaimRaceHasOneWinner=claims.filter(x=>x.status==="fulfilled").length===1;
+ const rollback=await prisma.uploadIntent.create({data:{ownerId:user.id,kind:"EVIDENCE",pathname:"sipp/evidence/"+randomUUID()+".png",mimeType:"image/png",sizeBytes:16,expiresAt:new Date(Date.now()+60000)}});
+ await prisma.$transaction(async tx=>{await consumeUploads(tx,[rollback.id],user.id,"EVIDENCE");throw new Error("Synthetic resource failure");}).catch(()=>undefined);
+ checks.uploadClaimRollsBackWithResource=(await prisma.uploadIntent.findUnique({where:{id:rollback.id}})).consumedAt===null;
+ const draft=await prisma.announcement.create({data:{slug:"audit-draft",title:"Synthetic draft",content:"Private draft fixture",createdById:admin.id}});
+ server=spawn(process.execPath,["node_modules/next/dist/bin/next","start","--port","3001","--hostname","127.0.0.1"],{env:process.env,stdio:"ignore",windowsHide:true});
+ let ready=false;
+ for(let i=0;i<40;i++){try{if((await fetch(origin+"/api/auth/providers")).ok){ready=true;break;}}catch{}await new Promise(resolve=>setTimeout(resolve,500));}
+ if(!ready) throw new Error("Server unavailable");
+ const jar=new Map();
+ const request=async(path,init={})=>{
+  const response=await fetch(origin+path,{...init,redirect:"manual",headers:{...init.headers,Cookie:[...jar].map(([key,value])=>key+"="+value).join("; ")}});
+  for(const header of response.headers.getSetCookie()){const pair=header.split(";")[0];const at=pair.indexOf("=");jar.set(pair.slice(0,at),pair.slice(at+1));}
+  return response;
+ };
+ const csrf=await (await request("/api/auth/csrf")).json();
+ await request("/api/auth/callback/credentials",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({csrfToken:csrf.csrfToken,username:"kkt149unsrat@pinaras.com",password,callbackUrl:origin+"/admin",json:"true"})});
+ const session=await (await request("/api/auth/session")).json();
+ checks.realHttpAdminCredentialSession=session.user?.id===admin.id && session.user?.role==="ADMIN_KELURAHAN";
+ checks.adminDashboardHttp200=(await request("/admin")).status===200;
+ checks.adminCannotAccessWarga=new URL((await request("/warga")).headers.get("location"),origin).pathname==="/admin";
+ checks.adminDraftDetailHttp200=(await request("/admin/pengumuman/"+draft.id)).status===200;
+ checks.draftMediaPublic404=(await request("/api/pengumuman/audit-draft/media")).status===404;
+ const jwt=await authOptions.callbacks.jwt({token:{},user:warga});
+ const encrypted=await encode({token:jwt,secret:authOptions.secret,maxAge:300});
+ const wargaRequest=(path)=>fetch(origin+path,{redirect:"manual",headers:{Cookie:"next-auth.session-token="+encrypted}});
+ const wargaSession=await (await wargaRequest("/api/auth/session")).json();
+ checks.googleAdapterJwtSessionPreservesIdentity=wargaSession.user?.id===user.id && wargaSession.user?.role==="WARGA";
+ checks.wargaDashboardHttp200=(await wargaRequest("/warga")).status===200;
+ checks.wargaCannotAccessAdmin=new URL((await wargaRequest("/admin")).headers.get("location"),origin).pathname==="/warga";
+ checks.wargaCannotPreviewDraft=(await wargaRequest("/api/admin/pengumuman/"+draft.id+"/media")).status===403;
+ checks.guestDashboardBlocked=new URL((await fetch(origin+"/admin",{redirect:"manual"})).headers.get("location"),origin).pathname==="/login";
+ checks.guestUploadBlocked=(await fetch(origin+"/api/uploads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"PROFILE",name:"p.png",mimeType:"image/png",sizeBytes:16})})).status===401;
+ const wrongJar=new Map();const csrfRes=await fetch(origin+"/api/auth/csrf");for(const h of csrfRes.headers.getSetCookie()){const p=h.split(";")[0],i=p.indexOf("=");wrongJar.set(p.slice(0,i),p.slice(i+1));}const wrongCsrf=await csrfRes.json();
+ const wrong=await fetch(origin+"/api/auth/callback/credentials",{method:"POST",redirect:"manual",headers:{"Content-Type":"application/x-www-form-urlencoded",Cookie:[...wrongJar].map(([k,v])=>k+"="+v).join("; ")},body:new URLSearchParams({csrfToken:wrongCsrf.csrfToken,username:"kkt149unsrat@pinaras.com",password:password+"wrong",callbackUrl:origin+"/admin",json:"true"})});
+ checks.wrongAdminPasswordRejected=(await wrong.json()).url?.includes("CredentialsSignin")===true;
+ console.log(JSON.stringify({isolatedDatabase:true,node:process.version,checks,realGoogleConsentExchangeTested:false,realBlobRoundtripTested:false}));
+ if(Object.values(checks).some(value=>!value)) process.exitCode=1;
+} catch {console.error("Isolated Preview integration failed; private details withheld.");process.exitCode=1;}
+finally{server?.kill();await prisma.$disconnect();}

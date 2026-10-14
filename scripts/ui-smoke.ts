@@ -16,11 +16,11 @@ async function main() {
             console.log(JSON.stringify({ publicPath: path, status: response.status, sharedHeaderPresent: html.includes("Navigasi publik"), sharedFooterPresent: html.includes("Navigasi footer") }));
             if (response.status !== 200 || !html.includes("Navigasi publik") || !html.includes("Navigasi footer")) process.exitCode = 1;
         }
-        const user = await prisma.user.findUnique({ where: { username: "admin.pinaras" }, select: { image: true, customImage: true } });
+        const user = await prisma.user.findUnique({ where: { username: "kkt149unsrat@pinaras.com" }, select: { image: true, customImage: true } });
         const published = await prisma.announcement.findFirst({ where: { status: "PUBLISHED" }, select: { id: true, slug: true, mediaType: true } });
         const draft = await prisma.announcement.findFirst({ where: { status: "DRAFT" }, select: { id: true, slug: true } });
         const csrf = await (await request("/api/auth/csrf")).json();
-        await request("/api/auth/callback/credentials", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ csrfToken: csrf.csrfToken, username: "admin.pinaras", password: process.env.ADMIN_SEED_PASSWORD ?? "", callbackUrl: origin + "/admin", json: "true" }) });
+        await request("/api/auth/callback/credentials", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ csrfToken: csrf.csrfToken, username: "kkt149unsrat@pinaras.com", password: process.env.ADMIN_SEED_PASSWORD ?? "", callbackUrl: origin + "/admin", json: "true" }) });
         const session = await (await request("/api/auth/session")).json();
         const loggedIn = session.user?.role === "ADMIN_KELURAHAN";
         console.log(JSON.stringify({ adminLoginWorks: loggedIn, profileSource: { customPhotoPresent: Boolean(user?.customImage), providerPhotoPresent: Boolean(user?.image), customPhotoUsesBlob: user?.customImage?.includes("blob.vercel-storage.com") ?? false, blobTokenConfigured: Boolean(process.env.BLOB_READ_WRITE_TOKEN) } }));

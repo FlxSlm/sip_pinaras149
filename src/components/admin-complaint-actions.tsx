@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { TextPromptDialog } from "@/components/text-prompt-dialog";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
@@ -11,6 +12,7 @@ type Props = {
 type Prompt = { action: "COMPLETE" | "REJECT" | "RESPOND" } | null;
 
 export function AdminComplaintActions({ complaint }: Props) {
+    const router = useRouter();
     const [pending, setPending] = useState(false);
     const [message, setMessage] = useState("");
     const [priority, setPriority] = useState("NORMAL");
@@ -28,7 +30,7 @@ export function AdminComplaintActions({ complaint }: Props) {
         });
         const result = (await response.json()) as { message?: string };
         if (response.ok) {
-            window.location.reload();
+            router.refresh(); setPending(false);
             return;
         }
         setMessage(result.message ?? "Tindakan gagal.");
@@ -73,7 +75,8 @@ export function AdminComplaintActions({ complaint }: Props) {
                 </div>
             )}
 
-            {!canProcess && !canFinish && <p className="mt-4 text-sm text-[var(--muted)]">Pengaduan ini sudah selesai atau ditolak.</p>}
+            {complaint.status === "SELESAI" && <p className="mt-4 text-sm text-[var(--muted)]">Pengaduan ini sudah selesai.</p>}
+            {complaint.status === "DITOLAK" && <p className="mt-4 text-sm text-[var(--muted)]">Pengaduan ini telah ditolak.</p>}
 
             {prompt && (
                 <TextPromptDialog

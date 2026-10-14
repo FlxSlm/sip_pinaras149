@@ -1,88 +1,34 @@
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const singleSections = new Set(["hero", "profil", "lokasi", "kontak"]);
+import { organizationInputSchema } from "@/lib/organization";
+import { getOrganization } from "@/lib/organization-store";
+import { prepareUploads, consumeUploads, UploadError } from "@/lib/uploads";
 
 export async function GET() {
     const session = await getServerSession(authOptions);
-    if (!session?.user.id || session.user.role !== "ADMIN_KELURAHAN") {
-        return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
-    }
-    const [siteContent, statistics, potentials, facilities, gallery] = await Promise.all([
-        prisma.siteContent.findMany(),
-        prisma.statistic.findMany({ orderBy: { sortOrder: "asc" } }),
-        prisma.potential.findMany({ orderBy: { sortOrder: "asc" } }),
-        prisma.facility.findMany({ orderBy: { name: "asc" } }),
-        prisma.galleryMedia.findMany({ orderBy: { sortOrder: "asc" } }),
-    ]);
-    return NextResponse.json({ siteContent, statistics, potentials, facilities, gallery });
+    if (!session?.user.id || session.user.role !== "ADMIN_KELURAHAN") return Response.json({ message: "Akses ditolak." }, { status: 403 });
+    const { publicMembers } = await getOrganization();
+    return Response.json({ members: publicMembers }, { headers: { "Cache-Control": "private, no-store" } });
 }
-
 export async function PATCH(request: Request) {
     const session = await getServerSession(authOptions);
-    if (!session?.user.id || session.user.role !== "ADMIN_KELURAHAN") {
-        return NextResponse.json({ message: "Akses ditolak." }, { status: 403 });
-    }
-
-    let body: { section?: string; value?: unknown };
+    if (!session?.user.id || session.user.role !== "ADMIN_KELURAHAN") return Response.json({ message: "Akses ditolak." }, { status: 403 });
+    const parsed = organizationInputSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) return Response.json({ message: "Struktur tidak valid. CMS hanya mengelola nama dan foto jabatan yang tersedia." }, { status: 400 });
+    const ids = parsed.data.members.flatMap((member) => member.imageUploadId ? [member.imageUploadId] : []);
+    if (ids.length > 8 || new Set(ids).size !== ids.length) return Response.json({ message: "Maksimal 8 foto berbeda dalam satu penyimpanan." }, { status: 400 });
     try {
-        body = await request.json();
-    } catch {
-        return NextResponse.json({ message: "Format permintaan tidak valid." }, { status: 400 });
-    }
-
-    const section = body.section;
-    if (section && singleSections.has(section)) {
-        await prisma.siteContent.upsert({
-            where: { key: section },
-            update: { value: body.value as never, updatedById: session.user.id },
-            create: { key: section, value: body.value as never, updatedById: session.user.id },
+        const { members: existing } = await getOrganization();
+        const files = await prepareUploads(prisma, ids, session.user.id, "STRUCTURE");
+        const photos = new Map(ids.map((id, index) => [id, files[index].path]));
+        const members = parsed.data.members.map((member) => ({ id: member.id, name: member.name, photoRef: member.imageUploadId ? photos.get(member.imageUploadId)! : member.removeImage ? null : existing.find((item) => item.id === member.id)?.photoRef ?? null }));
+        await prisma.$transaction(async (tx) => {
+            await consumeUploads(tx, ids, session.user.id, "STRUCTURE");
+            await tx.siteContent.upsert({ where: { key: "struktur" }, create: { key: "struktur", value: { members }, updatedById: session.user.id }, update: { value: { members }, updatedById: session.user.id } });
         });
-        return NextResponse.json({ message: "Konten tersimpan." });
-    }
-
-    if (section === "statistics") {
-        await replaceStatistics(body.value);
-        return NextResponse.json({ message: "Statistik tersimpan." });
-    }
-    if (section === "potentials") {
-        await replacePotentials(body.value);
-        return NextResponse.json({ message: "Potensi tersimpan." });
-    }
-    if (section === "facilities") {
-        await replaceFacilities(body.value);
-        return NextResponse.json({ message: "Fasilitas tersimpan." });
-    }
-
-    return NextResponse.json({ message: "Section tidak valid." }, { status: 400 });
-}
-
-type StatisticInput = { label: string; value: string; unit?: string | null; source: string; sourceYear?: string | null; sourcePage?: string | null; sortOrder?: number; published?: boolean };
-type PotentialInput = { title: string; description: string; imageRef?: string | null; sortOrder?: number; published?: boolean; sourceNote?: string | null };
-type FacilityInput = { name: string; category: string; description?: string | null; published?: boolean; sourceNote?: string | null };
-
-async function replaceStatistics(value: unknown) {
-    const items = Array.isArray(value) ? (value as StatisticInput[]) : [];
-    await prisma.$transaction([
-        prisma.statistic.deleteMany(),
-        prisma.statistic.createMany({ data: items.map((item, index) => ({ ...item, sortOrder: item.sortOrder ?? index, published: item.published ?? true, source: item.source || "—" })) }),
-    ]);
-}
-
-async function replacePotentials(value: unknown) {
-    const items = Array.isArray(value) ? (value as PotentialInput[]) : [];
-    await prisma.$transaction([
-        prisma.potential.deleteMany(),
-        prisma.potential.createMany({ data: items.map((item, index) => ({ ...item, sortOrder: item.sortOrder ?? index, published: item.published ?? true })) }),
-    ]);
-}
-
-async function replaceFacilities(value: unknown) {
-    const items = Array.isArray(value) ? (value as FacilityInput[]) : [];
-    await prisma.$transaction([
-        prisma.facility.deleteMany(),
-        prisma.facility.createMany({ data: items.map((item) => ({ ...item, category: item.category || "Umum", published: item.published ?? true })) }),
-    ]);
+        revalidatePath("/");
+        return Response.json({ message: "Struktur kelurahan tersimpan." });
+    } catch (error) { return Response.json({ message: error instanceof UploadError ? error.message : "Struktur belum dapat disimpan." }, { status: error instanceof UploadError ? error.status : 500 }); }
 }

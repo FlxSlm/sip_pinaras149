@@ -1,17 +1,15 @@
-import { getServerSession } from "next-auth";
+import { getDashboardSession } from "@/lib/dashboard-session";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getComplaintStats } from "@/lib/dashboard";
 import { StatusBadge } from "@/components/status-badge";
 import { DonutChart } from "@/components/donut-chart";
-import { DashboardShell } from "@/components/dashboard-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-    const session = await getServerSession(authOptions);
+    const session = await getDashboardSession();
     if (!session) redirect("/login");
     if (session.user.role !== "ADMIN_KELURAHAN") redirect("/warga");
 
@@ -55,13 +53,13 @@ export default async function AdminDashboardPage() {
     ];
 
     return (
-        <DashboardShell role="admin" userName={userName}>
+        <>
             <div className="mx-auto max-w-[1400px]">
                 {/* Welcome Header */}
                 <div className="dashboard-hero mb-6 rounded-2xl p-6 text-white shadow-sm sm:p-8">
                     <p className="text-sm font-semibold text-white/90">Selamat Datang,</p>
                     <h1 className="mt-1 text-3xl font-extrabold text-white sm:text-4xl">{userName}</h1>
-                    <p className="mt-2 text-sm text-white/85">Kelola pengaduan, pengumuman dan konten landing page untuk pelayanan publik yang lebih baik.</p>
+                    <p className="mt-2 text-sm text-white/85">Kelola pengaduan, pengumuman dan struktur kelurahan untuk pelayanan publik yang lebih baik.</p>
                 </div>
 
                 {/* Stat Cards */}
@@ -187,6 +185,6 @@ export default async function AdminDashboardPage() {
                     </div>
                 </div>
             </div>
-        </DashboardShell>
+        </>
     );
 }

@@ -19,7 +19,7 @@ async function main() {
       authSecretAliasesAgree: !configured("AUTH_SECRET") || !configured("NEXTAUTH_SECRET") || process.env.AUTH_SECRET === process.env.NEXTAUTH_SECRET,
       googleConfigured: configured("AUTH_GOOGLE_ID") && configured("AUTH_GOOGLE_SECRET"),
       seedPasswordConfigured: configured("ADMIN_SEED_PASSWORD"),
-      seedPasswordMeetsMinimum: (process.env.ADMIN_SEED_PASSWORD?.length ?? 0) >= 8,
+      seedPasswordMeetsMinimum: (process.env.ADMIN_SEED_PASSWORD?.length ?? 0) >= 12,
       authUrlConfigured: configured("NEXTAUTH_URL"),
       authUrlUsesHttps: process.env.NEXTAUTH_URL?.startsWith("https://") ?? false,
     },
@@ -32,8 +32,8 @@ async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000 });
   const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
   try {
-    const admin = await prisma.user.findUnique({ where: { username: "admin.pinaras" }, select: { role: true, passwordHash: true } });
-    const nonCanonicalAdminCount = await prisma.user.count({ where: { username: { equals: "admin.pinaras", mode: "insensitive", not: "admin.pinaras" } } });
+    const admin = await prisma.user.findUnique({ where: { username: "kkt149unsrat@pinaras.com" }, select: { role: true, passwordHash: true } });
+    const nonCanonicalAdminCount = await prisma.user.count({ where: { username: { equals: "kkt149unsrat@pinaras.com", mode: "insensitive", not: "kkt149unsrat@pinaras.com" } } });
     const googleAccounts = await prisma.account.count({ where: { provider: "google" } });
     const googleAccountsWithWrongRole = await prisma.account.count({ where: { provider: "google", user: { role: { not: "WARGA" } } } });
     const columns = await prisma.$queryRaw<Array<{ column_name: string }>>`SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'User'`;

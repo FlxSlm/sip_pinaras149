@@ -7,24 +7,27 @@ import { publicComplaintSelect, toPublicComplaint, PUBLIC_COMPLAINT_STATUSES } f
 import { AnnouncementCard } from "@/components/announcement-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Icon } from "@/components/ui/icon";
+import { getOrganization } from "@/lib/organization-store";
+import { OrganizationChart } from "@/components/organization-chart";
 
 export const dynamic = "force-dynamic";
 function text(value: unknown) { return typeof value === "string" ? value : ""; }
 
 export default async function Home() {
-    const [content, announcements, complaintRows] = await Promise.all([
+    const [content, announcements, complaintRows, organization] = await Promise.all([
         getLandingContent(),
         prisma.announcement.findMany({ where: { status: "PUBLISHED" }, orderBy: [{ isPinned: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }], take: 3, select: publicAnnouncementSelect }),
         prisma.complaint.findMany({ where: { status: { in: [...PUBLIC_COMPLAINT_STATUSES] } }, orderBy: { updatedAt: "desc" }, take: 3, select: publicComplaintSelect }),
+        getOrganization(),
     ]);
     const hero = content.hero;
     const profile = content.profil;
     const contacts = [{ label: "Alamat", value: text(content.kontak.alamat) }, { label: "Telepon", value: text(content.kontak.telepon) }, { label: "WhatsApp", value: text(content.kontak.whatsapp) }, { label: "Email", value: text(content.kontak.email) }].filter((item) => item.value);
     const complaints = complaintRows.map(toPublicComplaint);
-    const heroImage = text(hero.image) || "/images/panorama-pinaras.png";
+    const heroImage = text(hero.image) && text(hero.image) !== "/images/panorama-pinaras.png" ? text(hero.image) : "/images/panorama-pinaras.webp";
     return <>
         <section className="relative isolate overflow-hidden bg-[var(--brand-deep)] text-white">
-            <Image src={heroImage} alt="" fill priority sizes="100vw" className="object-cover object-center" />
+            <Image src={heroImage} alt="" fill preload unoptimized={heroImage.startsWith("https://")} sizes="100vw" className="object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#06354c]/95 via-[#06354c]/80 to-[#06354c]/35" />
             <div className="public-container relative grid gap-8 py-12 sm:py-16 lg:grid-cols-[1.7fr_1fr] lg:items-end lg:py-20">
                 <div className="max-w-2xl"><p className="mb-4 text-sm font-semibold text-white/90">Sistem Informasi Peduli Pinaras</p><h1 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">{text(hero.title)}</h1><p className="mt-5 max-w-xl text-lg leading-8 text-white/90">{text(hero.subtitle)}</p><div className="mt-7 flex flex-wrap gap-3"><Link href="/warga/pengaduan/buat" className="ui-button bg-white text-[var(--brand-deep)] hover:bg-[var(--brand-soft)]">{text(hero.ctaText) || "Buat pengaduan"}<Icon name="arrow" /></Link><Link href="/pengaduan" className="ui-button border-white/50 bg-white/10 text-white hover:bg-white/20">{text(hero.ctaSecondaryText) || "Lihat forum pengaduan"}</Link></div></div>
@@ -38,6 +41,7 @@ export default async function Home() {
             </div>
             <div className="rounded-xl border border-[var(--line)] bg-white p-5 sm:p-6"><p className="public-kicker">Layanan pengaduan</p><h3 className="text-2xl font-semibold">Sampaikan, pantau, dapatkan tanggapan</h3><ol className="mt-5 divide-y divide-[var(--line)]">{[{ title: "Masuk dengan Google", description: "Gunakan akun Google untuk mengakses ruang warga." }, { title: "Sampaikan pengaduan", description: "Tuliskan masalah, lokasi kejadian, dan lampirkan foto jika diperlukan." }, { title: "Pantau penanganannya", description: "Lihat status serta tanggapan admin melalui riwayat dan notifikasi." }].map((step, i) => <li key={step.title} className="flex gap-4 py-4"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] font-semibold text-[var(--brand-dark)]">{i + 1}</span><div><h4 className="font-semibold">{step.title}</h4><p className="mt-1 text-sm leading-6 text-[var(--muted)]">{step.description}</p></div></li>)}</ol></div>
         </section>
+        <section id="struktur" className="public-container public-section"><p className="public-kicker">Pemerintahan kelurahan</p><h2 className="public-title">Struktur Kelurahan Pinaras</h2><OrganizationChart members={organization.publicMembers} /></section>
         <section id="pengumuman" className="border-y border-[var(--line)] bg-white"><div className="public-container public-section"><div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="public-kicker">Informasi resmi</p><h2 className="public-title">Pengumuman terbaru</h2></div><Link href="/pengumuman" className="ui-button ui-button-secondary">Semua pengumuman <Icon name="arrow" /></Link></div>{announcements.length ? <div className="grid gap-4 md:grid-cols-3">{announcements.map((item) => <AnnouncementCard key={item.id} item={toAnnouncementCard(item)} compact />)}</div> : <div className="flex items-start gap-4 rounded-xl bg-[var(--surface)] p-5"><Icon name="announcement" className="size-8 text-[var(--brand)]" /><div><h3 className="font-semibold">Belum ada pengumuman terbit</h3><p className="mt-1 text-sm text-[var(--muted)]">Informasi kelurahan akan muncul di sini setelah diterbitkan oleh admin.</p></div></div>}</div></section>
         {(content.potentials.length > 0 || content.facilities.length > 0) && <section className="public-container public-section grid gap-8 lg:grid-cols-2">
             <div id="potensi"><p className="public-kicker">Potensi</p><h2 className="text-2xl font-semibold">Sumber daya kelurahan</h2><div className="mt-4 divide-y divide-[var(--line)]">{content.potentials.map((item) => <article key={item.id} className="py-4"><h3 className="font-semibold">{item.title}</h3><p className="mt-1 leading-7 text-[var(--muted)]">{item.description}</p>{item.sourceNote && <p className="mt-1 text-xs text-[var(--muted)]">{item.sourceNote}</p>}</article>)}</div></div>

@@ -69,6 +69,8 @@ model User {
   complaintLogs ComplaintLog[] @relation("ComplaintLogActor")
   announcements Announcement[] @relation("AnnouncementCreator")
   notifications Notification[]
+  uploadIntents UploadIntent[]
+  loginThrottle AdminLoginThrottle?
 
   @@index([role])
 }
@@ -90,6 +92,7 @@ model Complaint {
   category         String
   description      String
   location         String?
+  neighborhood     Int?             @db.SmallInt
   status           ComplaintStatus   @default(MENUNGGU)
   priority         ComplaintPriority?
   internalNote     String?
@@ -156,9 +159,30 @@ model Announcement {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   createdBy   User                 @relation("AnnouncementCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  attachments AnnouncementAttachment[]
 
   @@index([status])
   @@index([createdById])
+}
+
+model AnnouncementAttachment {
+  id             String               @id @default(cuid())
+  announcementId String
+  name           String
+  mediaType      AnnouncementMediaType
+  mediaRef       String
+  sizeBytes      Int
+  sortOrder      Int                  @default(0)
+  announcement   Announcement         @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@index([announcementId, sortOrder])
+}
+
+model AdminLoginThrottle {
+  userId         String    @id
+  failedAttempts Int       @default(0)
+  blockedUntil   DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -278,4 +302,20 @@ model GalleryMedia {
   sortOrder   Int      @default(0)
   published   Boolean  @default(true)
   createdAt   DateTime @default(now())
+}
+
+// Staged private Blob uploads. Consumed atomically with the owning resource.
+model UploadIntent {
+  id         String    @id @default(uuid())
+  ownerId    String
+  kind       String
+  pathname   String    @unique
+  mimeType   String
+  sizeBytes  Int
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, expiresAt])
 }

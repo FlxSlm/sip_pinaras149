@@ -11,6 +11,7 @@ import { Button, buttonClassName } from "@/components/ui/primitives";
 const links = [
   { label: "Beranda", href: "/" },
   { label: "Profil", href: "/#profil" },
+  { label: "Struktur", href: "/#struktur" },
   { label: "Potensi", href: "/#potensi" },
   { label: "Layanan", href: "/#layanan" },
   { label: "Pengumuman", href: "/pengumuman" },
@@ -45,10 +46,10 @@ export function PublicHeader() {
       <a href="#public-content" className="skip-link">Lewati navigasi</a>
       <header className="dashboard-header sticky top-0 z-40 border-b border-[var(--line)]">
         <div className="public-container flex min-h-[76px] items-center justify-between gap-3">
-          <Link href="/" aria-label="SIPP Pinaras, beranda" className="flex min-w-0 items-center gap-2.5">
+          <Link href="/" aria-label="SIPP, beranda" className="flex min-w-0 items-center gap-2.5">
             <Image src="/images/logo tomohon.png" alt="Logo Kota Tomohon" width={38} height={38} className="size-9 shrink-0 object-contain" />
             <div className="min-w-0">
-              <p className="text-sm font-bold tracking-tight sm:text-base">SIPP PINARAS</p>
+              <p className="text-sm font-bold tracking-tight sm:text-base">SIPP</p>
               <p className="hidden text-xs text-[var(--muted)] sm:block">Sistem Informasi Peduli Pinaras</p>
             </div>
           </Link>
@@ -62,7 +63,7 @@ export function PublicHeader() {
       {open && (
         <Dialog labelledBy={id} onClose={() => setOpen(false)}>
           <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 id={id} className="text-lg font-semibold">Jelajahi SIPP Pinaras</h2>
+            <h2 id={id} className="text-lg font-semibold">Jelajahi SIPP</h2>
             <Button variant="ghost" autoFocus aria-label="Tutup navigasi" onClick={() => setOpen(false)} className="size-11 p-0"><Icon name="close" /></Button>
           </div>
           {navigation(true)}

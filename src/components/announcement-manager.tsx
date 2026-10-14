@@ -6,10 +6,12 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
+import { uploadPrivateFile } from "@/lib/upload-client";
+import { announcementFileKind, mergeAnnouncementFiles, type AnnouncementAttachmentView } from "@/lib/announcement-files";
 
-type Announcement = { id: string; slug: string; title: string; content: string; mediaType: string; hasMedia: boolean; isPinned: boolean; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; publishedAt: string | null; createdAt: string };
+type Announcement = { id: string; slug: string; title: string; content: string; mediaType: string; hasMedia: boolean; attachments: AnnouncementAttachmentView[]; isPinned: boolean; status: "DRAFT" | "PUBLISHED"; publishedAt: string | null; createdAt: string };
 type Confirmation = { title: string; description: string; danger?: boolean; run: () => Promise<void> };
-const labels = { DRAFT: "Draft", PUBLISHED: "Terbit", ARCHIVED: "Arsip" };
+const labels = { DRAFT: "Draft", PUBLISHED: "Terbit" };
 
 export function AnnouncementManager() {
     const [items, setItems] = useState<Announcement[]>([]);
@@ -20,7 +22,10 @@ export function AnnouncementManager() {
     const [query, setQuery] = useState("");
     const [editor, setEditor] = useState<{ item: Announcement | null } | null>(null);
     const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
-    const [mediaType, setMediaType] = useState("TEXT");
+    const [files, setFiles] = useState<File[]>([]);
+    const [retained, setRetained] = useState<AnnouncementAttachmentView[]>([]);
+    const [fileError, setFileError] = useState("");
+    const [dragging, setDragging] = useState(false);
     const file = useRef<HTMLInputElement>(null);
     const id = useId();
 
@@ -40,24 +45,29 @@ export function AnnouncementManager() {
         return () => { active = false; };
     }, []);
 
-    function openEditor(item: Announcement | null) { setMediaType(item?.mediaType ?? "TEXT"); setEditor({ item }); setMessage(""); }
+    function openEditor(item: Announcement | null) { setFiles([]); setRetained(item?.attachments ?? []); setFileError(""); setEditor({ item }); setMessage(""); }
+    function addFiles(incoming: File[]) { if (pending) return; const result = mergeAnnouncementFiles(files, incoming, retained.length); setFiles(result.files); setFileError(result.errors.join(" ")); }
     async function mutate(method: string, body: BodyInit, isJson = false) {
         setPending(true); setMessage("");
         try {
+            if (body instanceof FormData) {
+                const uploads = [];
+                for (const media of files) { const kind = announcementFileKind(media)!; uploads.push({ id: await uploadPrivateFile(media, kind), kind, name: media.name }); }
+                body.set("attachmentUploads", JSON.stringify(uploads));
+            }
             const response = await fetch("/api/admin/pengumuman", { method, body, ...(isJson ? { headers: { "Content-Type": "application/json" } } : {}) });
             const result = await response.json() as { message?: string };
             setMessage(result.message ?? (response.ok ? "Pengumuman disimpan." : "Tindakan belum berhasil."));
             if (response.ok) { setEditor(null); await refresh(); }
-        } catch { setMessage("Tindakan belum berhasil. Periksa koneksi dan coba kembali."); }
+        } catch (error) { setMessage(error instanceof Error ? error.message : "Tindakan belum berhasil. Periksa koneksi dan coba kembali."); }
         finally { setPending(false); }
     }
     function requestSave(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const body = new FormData(event.currentTarget);
-        body.set("mediaType", mediaType);
+        body.set("mediaType", retained[0]?.mediaType ?? (files[0] ? announcementFileKind(files[0])! : "TEXT"));
+        body.set("retainedAttachmentIds", JSON.stringify(retained.map((item) => item.id)));
         if (editor?.item) body.set("id", editor.item.id);
-        const uploaded = body.get("media");
-        if (uploaded instanceof File && uploaded.size === 0) body.delete("media");
         const status = String(body.get("status"));
         setConfirmation({
             title: status === "PUBLISHED" ? "Simpan dan terbitkan pengumuman?" : "Simpan pengumuman ini?",
@@ -71,7 +81,7 @@ export function AnnouncementManager() {
     const filtered = items.filter((item) => (filter === "ALL" || item.status === filter) && item.title.toLocaleLowerCase("id-ID").includes(query.trim().toLocaleLowerCase("id-ID")));
     return <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-[var(--muted)]">{items.length} pengumuman · {items.filter((item) => item.status === "PUBLISHED").length} terbit</p><Button disabled={pending} onClick={() => openEditor(null)}><Icon name="plus" />Buat pengumuman</Button></div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto]"><label><span className="sr-only">Cari pengumuman admin</span><input type="search" placeholder="Cari judul pengumuman..." value={query} onChange={(event) => setQuery(event.target.value)} className="w-full" /></label><label><span className="sr-only">Status publikasi</span><select value={filter} onChange={(event) => setFilter(event.target.value)} className="w-full"><option value="ALL">Semua status</option><option value="PUBLISHED">Terbit</option><option value="DRAFT">Draft</option><option value="ARCHIVED">Arsip</option></select></label></div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]"><label><span className="sr-only">Cari pengumuman admin</span><input type="search" placeholder="Cari judul pengumuman..." value={query} onChange={(event) => setQuery(event.target.value)} className="w-full" /></label><label><span className="sr-only">Status publikasi</span><select value={filter} onChange={(event) => setFilter(event.target.value)} className="w-full"><option value="ALL">Semua</option><option value="PUBLISHED">Terbit</option><option value="DRAFT">Draft</option></select></label></div>
         {message && <p role="status" className="rounded-xl border border-[var(--line)] bg-white p-4 text-sm">{message}</p>}
         {loading ? <p role="status" className="rounded-xl bg-white p-5">Memuat pengumuman...</p> : filtered.length ? <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-white">{filtered.map((item) => <article key={item.id} className="border-b border-[var(--line)] p-5 last:border-b-0">
             <div className="flex flex-wrap gap-2 text-xs"><span className={"rounded px-2 py-1 font-semibold " + (item.status === "PUBLISHED" ? "ui-tone-done" : "ui-tone-progress")}>{labels[item.status]}</span><span className="rounded bg-[var(--surface)] px-2 py-1">{item.mediaType === "TEXT" ? "Teks" : item.mediaType}</span>{item.isPinned && <span className="rounded px-2 py-1 ui-tone-waiting">Penting</span>}</div>
@@ -83,8 +93,10 @@ export function AnnouncementManager() {
             <form key={editor.item?.id ?? "new"} className="grid gap-5" onSubmit={requestSave}>
                 <label className="text-sm font-semibold">Judul<input autoFocus name="title" defaultValue={editor.item?.title ?? ""} required minLength={3} maxLength={160} className="mt-2 w-full" /></label>
                 <label className="text-sm font-semibold">Isi pengumuman<textarea name="content" defaultValue={editor.item?.content ?? ""} required maxLength={20000} rows={7} className="mt-2 w-full" /></label>
-                <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Jenis media<select value={mediaType} onChange={(event) => { setMediaType(event.target.value); if (file.current) file.current.value = ""; }} className="mt-2 w-full"><option value="TEXT">Teks</option><option value="PDF">PDF</option><option value="VIDEO">Video</option></select></label><label className="text-sm font-semibold">Status publikasi<select name="status" defaultValue={editor.item?.status ?? "DRAFT"} className="mt-2 w-full"><option value="DRAFT">Draft</option><option value="PUBLISHED">Terbit</option>{editor.item?.status === "ARCHIVED" && <option value="ARCHIVED">Arsip</option>}</select></label></div>
-                {mediaType !== "TEXT" && <label className="text-sm font-semibold">Lampiran {editor.item?.hasMedia && editor.item.mediaType === mediaType ? "(opsional: unggah untuk mengganti)" : "(wajib)"}<input ref={file} name="media" type="file" required={!editor.item?.hasMedia || editor.item.mediaType !== mediaType} accept={mediaType === "PDF" ? "application/pdf,.pdf" : "video/mp4,video/webm,.mp4,.webm"} className="mt-2 block w-full rounded-xl border border-[var(--line)] p-3 text-sm" /><span className="mt-2 block text-xs font-normal text-[var(--muted)]">{mediaType === "PDF" ? "PDF maksimal 10 MB. Halaman pertama menjadi thumbnail." : "MP4 / WEBM maksimal 50 MB. Thumbnail diambil dari video."}</span></label>}
+                <label className="text-sm font-semibold">Status publikasi<select name="status" defaultValue={editor.item?.status ?? "DRAFT"} className="mt-2 w-full"><option value="DRAFT">Draft</option><option value="PUBLISHED">Terbit</option></select></label>
+                <div><p className="text-sm font-semibold">Lampiran (opsional)</p><div className={"mt-2 rounded-xl border-2 border-dashed p-5 text-center " + (dragging ? "border-[var(--brand)] bg-[var(--brand-soft)]" : "border-[var(--line)]")} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); addFiles(Array.from(event.dataTransfer.files)); }}>
+                    <Icon name="upload" className="mx-auto size-8 text-[var(--brand)]" /><p className="mt-2 font-semibold">Tarik dan letakkan file di sini</p><p className="mt-2 text-xs text-[var(--muted)]">Maksimal 8 lampiran · PDF 10 MB · MP4 / WEBM 50 MB per file</p><button type="button" disabled={pending} className="ui-button ui-button-secondary mt-3" onClick={() => file.current?.click()}>Pilih lampiran</button><input ref={file} type="file" multiple accept="application/pdf,video/mp4,video/webm,.pdf,.mp4,.webm" aria-label="Pilih lampiran pengumuman" className="sr-only" onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
+                </div>{fileError && <p role="alert" className="mt-2 text-sm text-[var(--danger)]">{fileError}</p>}<ul className="mt-3 space-y-2">{retained.map((item) => <li key={item.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-[var(--line)] p-3"><span className="min-w-0 flex-1 break-words text-sm">{item.name}</span><button type="button" disabled={pending} aria-label={"Hapus lampiran " + item.name} onClick={() => setRetained(retained.filter((entry) => entry.id !== item.id))}><Icon name="close" /></button></li>)}{files.map((item,index) => <li key={item.name+index} className="flex min-w-0 items-center gap-3 rounded-lg border border-[var(--line)] p-3"><span className="min-w-0 flex-1 break-words text-sm">{item.name} · baru</span><button type="button" disabled={pending} aria-label={"Hapus pilihan " + item.name} onClick={() => setFiles(files.filter((_,i) => i !== index))}><Icon name="close" /></button></li>)}</ul></div>
                 <label className="flex items-center gap-3 text-sm"><input type="checkbox" name="isPinned" defaultChecked={editor.item?.isPinned} />Sematkan sebagai pengumuman penting</label>
                 {message && <p role="status" className="text-sm text-[var(--danger)]">{message}</p>}
                 <button type="submit" disabled={pending} className="ui-button ui-button-primary justify-self-start">{pending ? "Menyimpan..." : editor.item ? "Simpan perubahan" : "Simpan pengumuman"}</button>

@@ -19,6 +19,9 @@ describe("authOptions.signIn callback", () => {
     it("WARGA boleh login via Google OAuth", async () => {
         expect(await signIn({ user: { id: "u1", role: "WARGA" }, account: { type: "oauth", provider: "google" } })).toBe(true);
     });
+    it("Google email yang belum terverifikasi ditolak", async () => {
+        expect(await signIn({ user: { id: "u1", role: "WARGA" }, account: { type: "oauth", provider: "google" }, profile: { email_verified: false } })).toBe(false);
+    });
 
     it("ADMIN_KELURAHAN tidak boleh login via Google OAuth", async () => {
         expect(await signIn({ user: { id: "u1", role: "ADMIN_KELURAHAN" }, account: { type: "oauth" } })).toBe(false);

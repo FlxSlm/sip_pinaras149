@@ -4,8 +4,11 @@ import { GET, PATCH } from "./route";
 const mocks = vi.hoisted(() => ({ session: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), users: vi.fn(), notifications: vi.fn() }));
 vi.mock("next-auth", () => ({ getServerSession: mocks.session }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
-vi.mock("@/lib/prisma", () => ({ prisma: { announcement: { findMany: mocks.findMany, findUnique: mocks.findUnique, update: mocks.update }, user: { findMany: mocks.users }, notification: { createMany: mocks.notifications } } }));
-beforeEach(() => { vi.clearAllMocks(); mocks.session.mockResolvedValue({ user: { id: "admin-test", role: "ADMIN_KELURAHAN" } }); mocks.update.mockResolvedValue({}); mocks.users.mockResolvedValue([]); });
+vi.mock("@/lib/prisma", () => {
+ const db = { announcement: { findMany: mocks.findMany, findUnique: mocks.findUnique, update: mocks.update }, user: { findMany: mocks.users }, notification: { createMany: mocks.notifications } };
+ return { prisma: { ...db, $transaction: async (fn: (tx: unknown) => unknown) => fn(db) } };
+});
+beforeEach(() => { vi.clearAllMocks(); mocks.session.mockResolvedValue({ user: { id: "admin-test", role: "ADMIN_KELURAHAN" } }); mocks.update.mockResolvedValue({ id: "announcement-test" }); mocks.users.mockResolvedValue([]); });
 
 function edit(mediaType = "PDF") {
     const body = new FormData();
@@ -13,6 +16,16 @@ function edit(mediaType = "PDF") {
     return new Request("http://localhost/api/admin/pengumuman", { method: "PATCH", body });
 }
 describe("announcement edit and authorization", () => {
+    it("projects legacy archived announcements as drafts without changing stored records", async () => {
+        mocks.findMany.mockResolvedValue([{ id: "legacy", status: "ARCHIVED", mediaType: "TEXT", mediaRef: null }]);
+        expect((await (await GET()).json())[0].status).toBe("DRAFT");
+        expect(mocks.update).not.toHaveBeenCalled();
+    });
+    it("rejects new archived status", async () => {
+        const body = new FormData(); body.set("id", "test"); body.set("title", "Pengumuman uji"); body.set("content", "Isi uji"); body.set("status", "ARCHIVED");
+        expect((await PATCH(new Request("http://localhost/api/admin/pengumuman", { method: "PATCH", body }))).status).toBe(400);
+        expect(mocks.update).not.toHaveBeenCalled();
+    });
     it("existing PDF can be edited without uploading it again, preserving publication date", async () => {
         const date = new Date("2026-10-01T00:00:00Z");
         mocks.findUnique.mockResolvedValue({ mediaType: "PDF", mediaRef: "storage/announcements/fixture.pdf", status: "PUBLISHED", publishedAt: date });
@@ -40,9 +53,11 @@ describe("announcement edit and authorization", () => {
         expect(mocks.findUnique).not.toHaveBeenCalled();
     });
     it("admin list emits media presence without the storage key", async () => {
-        mocks.findMany.mockResolvedValue([{ id: "test", mediaRef: "storage/announcements/fixture.pdf" }]);
+        mocks.findMany.mockResolvedValue([{ id: "test", mediaType: "PDF", mediaRef: "storage/announcements/fixture.pdf" }]);
         const response = await GET();
-        expect(await response.json()).toEqual([{ id: "test", hasMedia: true }]);
+        const body = await response.json();
+        expect(body[0]).toMatchObject({ id: "test", hasMedia: true, attachments: [{ id: "legacy", mediaType: "PDF" }] });
+        expect(JSON.stringify(body)).not.toContain("storage/");
         expect(response.headers.get("cache-control")).toBe("private, no-store");
     });
     it("draft publication notifies recipients, published edits do not notify again", async () => {

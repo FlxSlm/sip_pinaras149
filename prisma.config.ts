@@ -1,5 +1,5 @@
 import { loadEnvConfig } from "@next/env";
-import { defineConfig } from "prisma/config";
+import { defineConfig, env } from "prisma/config";
 
 loadEnvConfig(process.cwd());
 
@@ -10,8 +10,7 @@ export default defineConfig({
         seed: "tsx prisma/seed.ts",
     },
     datasource: {
-        url:
-            process.env.DATABASE_URL ??
-            "postgresql://postgres:postgres@localhost:5432/sip_pinaras?schema=public",
+        // CLI migrations use the direct URL; runtime DATABASE_URL may be pooled.
+        url: process.env.DIRECT_URL ?? env("DATABASE_URL"),
     },
 });

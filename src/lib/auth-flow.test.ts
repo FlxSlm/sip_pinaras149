@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 
 const { findUnique } = vi.hoisted(() => ({ findUnique: vi.fn() }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique } } }));
+vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique }, $transaction: async (action: (tx: unknown) => unknown) => action({ adminLoginThrottle: { update: async () => ({}) }, $executeRaw: async () => 0, $queryRaw: async () => [{ failedAttempts: 0, blockedUntil: null }] }) } }));
 const signIn = authOptions.callbacks!.signIn as unknown as (params: unknown) => Promise<boolean>;
 const jwt = authOptions.callbacks!.jwt as unknown as (params: unknown) => Promise<Record<string, unknown>>;
 const session = authOptions.callbacks!.session as unknown as (params: unknown) => Promise<{ user: { id: string; role: string } }>;
@@ -27,17 +27,21 @@ describe("authentication methods", () => {
 describe("admin authorize", () => {
     it("normalisasi username, password benar, tanpa membocorkan hash", async () => {
         findUnique.mockResolvedValue(admin);
-        expect(await authorize({ username: " ADMIN.PINARAS ", password: "test-password" })).toEqual({ id: admin.id, name: admin.name, email: null, role: admin.role });
-        expect(findUnique.mock.calls[0][0].where).toEqual({ username: "admin.pinaras" });
+        expect(await authorize({ username: " KKT149UNSRAT@PINARAS.COM ", password: "test-password" })).toEqual({ id: admin.id, name: admin.name, email: null, role: admin.role });
+        expect(findUnique.mock.calls[0][0].where).toEqual({ username: "kkt149unsrat@pinaras.com" });
     });
-    it.each([null, { ...admin, role: "WARGA" }, { ...admin, passwordHash: null }, { ...admin, passwordHash: "scrypt:salt:zz" }])("menolak akun/hash tidak valid", async (user) => {
+    it.each([null, { ...admin, role: "WARGA" }, { ...admin, passwordHash: null }])("menolak akun/hash tidak valid", async (user) => {
         findUnique.mockResolvedValue(user);
         expect(await authorize({ username: "admin.pinaras", password: "test-password" })).toBeNull();
     });
     it("password salah atau ditambah spasi ditolak", async () => {
         findUnique.mockResolvedValue(admin);
-        expect(await authorize({ username: "admin.pinaras", password: "wrong-password" })).toBeNull();
-        expect(await authorize({ username: "admin.pinaras", password: "test-password " })).toBeNull();
+        await expect(authorize({ username: "kkt149unsrat@pinaras.com", password: "wrong-password" })).rejects.toThrow("AdminLoginInvalid:4");
+        await expect(authorize({ username: "kkt149unsrat@pinaras.com", password: "test-password " })).rejects.toThrow("AdminLoginInvalid:4");
+    });
+    it("hash tidak valid ditolak tanpa membocorkan hash", async () => {
+        findUnique.mockResolvedValue({ ...admin, passwordHash: "scrypt:salt:zz" });
+        await expect(authorize({ username: "kkt149unsrat@pinaras.com", password: "test-password" })).rejects.toThrow("AdminLoginInvalid:4");
     });
     it("input kosong ditolak sebelum query", async () => {
         expect(await authorize({})).toBeNull();

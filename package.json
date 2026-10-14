@@ -7,6 +7,7 @@
     "prebuild": "node scripts/prepare-pdf-worker.mjs",
     "dev": "next dev",
     "build": "next build",
+    "build:vercel": "node scripts/check-deployment-env.mjs && prisma generate && npm run build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -15,15 +16,20 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
+    "db:deploy": "prisma migrate deploy",
+    "db:validate": "prisma validate",
+    "db:init-admin": "tsx prisma/initialize-admin.ts",
+    "storage:audit": "tsx scripts/migrate-local-files.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
     "@next/env": "^16.3.8",
-    "@prisma/adapter-pg": "^7.10.0",
-    "@prisma/client": "7.0.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "@vercel/blob": "^2.8.1",
-    "next": "16.3.1",
+    "heic-to": "^1.6.6",
+    "next": "16.3.8",
     "next-auth": "^4.24.15",
     "pdfjs-dist": "^6.4.299",
     "pg": "^8.23.0",
@@ -32,18 +38,26 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.1",
-    "prisma": "7.0.0",
+    "eslint-config-next": "16.3.8",
+    "jsdom": "^29.1.1",
+    "prisma": "7.10.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "@auth/core": "0.41.3",
+    "deepmerge-ts": "8.0.2",
+    "mysql2": "3.24.5",
+    "source-map-js": "1.2.2"
   },
   "engines": {
     "node": "24.x"

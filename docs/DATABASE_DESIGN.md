@@ -3,6 +3,8 @@
 ## Prinsip
 Gunakan schema sederhana, eksplisit, dan mudah diaudit. Status penanganan dan priority harus terpisah.
 
+Pengumuman setelah arahan lanjutan 14 Oktober 2026 hanya menerima status baru DRAFT/PUBLISHED. Enum ARCHIVED tetap ada untuk kompatibilitas record historis; antarmuka admin menampilkan record tersebut sebagai Draft tanpa mengubah database saat pembacaan. Tidak diperlukan migrasi atau penghapusan data untuk menghapus pilihan Arsip.
+
 ## Entitas inti
 
 ### User
@@ -115,6 +117,7 @@ Statistik Pinaras berbasis BPS sebaiknya menyimpan:
 - verified_at
 
 ## Data integrity
+- Pembaruan 14 Oktober 2026: `Complaint.neighborhood` nullable, dengan nilai 1–8; null berarti tidak diketahui. `AnnouncementAttachment` menyimpan beberapa lampiran pada satu pengumuman. `AdminLoginThrottle` menyimpan penghitung dan waktu tunggu per akun agar berlaku lintas instance Vercel. Struktur kelurahan memakai `SiteContent` key `struktur` tanpa role database tambahan.
 - ticket number unique
 - foreign keys valid
 - enum valid

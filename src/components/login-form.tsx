@@ -3,14 +3,19 @@
 import { FormEvent, useEffect, useState } from "react";
 import { getProviders, getSession, signIn } from "next-auth/react";
 import { getLoginDestination } from "@/lib/authorization";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { getAuthErrorMessage, getAuthAttemptsRemaining, getAuthLockUntil } from "@/lib/auth-errors";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?: string; initialError: string }) {
+export default function LoginForm({ callbackUrl, initialError, initialBlockedUntil = null, initialAttemptsRemaining = null }: { callbackUrl?: string; initialError: string; initialBlockedUntil?: number | null; initialAttemptsRemaining?: number | null }) {
+    const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(initialError);
     const [pending, setPending] = useState(false);
+    const [blockedUntil, setBlockedUntil] = useState(initialBlockedUntil);
+    const [remaining, setRemaining] = useState(0);
+    const [attemptsRemaining, setAttemptsRemaining] = useState(initialAttemptsRemaining);
     const [providers, setProviders] = useState<Record<string, { name?: string }> | null>(null);
 
     useEffect(() => {
@@ -19,6 +24,12 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
             setError("Layanan login belum dapat dihubungi. Silakan coba lagi.");
         });
     }, []);
+
+    useEffect(() => {
+        const tick = () => setRemaining(blockedUntil ? Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000)) : 0);
+        const timer = window.setInterval(tick, 1000); tick();
+        return () => window.clearInterval(timer);
+    }, [blockedUntil]);
 
     async function handleGoogleLogin() {
         setPending(true);
@@ -34,6 +45,7 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
 
     async function handleStaffLogin(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        if (pending || remaining > 0) return;
         setPending(true);
         setError("");
 
@@ -47,6 +59,10 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
 
             if (!result?.ok || result.error) {
                 setError(getAuthErrorMessage(result?.error ?? "CredentialsSignin"));
+                const until = getAuthLockUntil(result?.error);
+                setBlockedUntil(until);
+                setRemaining(until ? Math.max(0, Math.ceil((until - Date.now()) / 1000)) : 0);
+                setAttemptsRemaining(getAuthAttemptsRemaining(result?.error));
                 return;
             }
 
@@ -55,7 +71,7 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
                 setError(getAuthErrorMessage("SessionRequired"));
                 return;
             }
-            window.location.assign(getLoginDestination(session.user.role, callbackUrl));
+            setPassword(""); router.replace(getLoginDestination(session.user.role, callbackUrl)); router.refresh();
         } catch {
             setError("Layanan login belum dapat dihubungi. Silakan coba lagi.");
         } finally {
@@ -64,9 +80,9 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
     }
 
     return (
-        <main className="nature-hero relative flex min-h-screen flex-col justify-center px-6 py-12 lg:px-20 lg:py-0">
+        <main className="nature-hero login-page">
             {/* Header / Brand */}
-            <div className="absolute left-6 top-6 flex items-center gap-3 lg:left-20 lg:top-10">
+            <div className="relative mx-auto flex w-full max-w-7xl items-center gap-3 pb-8">
                 <Image src="/images/logo tomohon.png" alt="Logo Tomohon" width={48} height={48} className="logo-pentagon size-12 object-contain" />
                 <div className="text-white">
                     <p className="text-xl font-bold leading-tight tracking-wide">SIPP</p>
@@ -87,13 +103,13 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
                     <div className="flex w-full flex-col justify-center lg:w-[55%]">
                         <p className="text-xl text-white sm:text-2xl">Selamat Datang di</p>
                         <h1 className="mt-1 text-4xl font-extrabold leading-tight text-white sm:text-6xl lg:text-[4rem]">
-                            SIPP <span className="text-white">Kelurahan Pinaras</span>
+                            SIPP
                         </h1>
                         <p className="mt-6 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
                             Sistem Informasi Peduli Pinaras, hadir untuk memberikan informasi, layanan pengaduan, dan berbagai potensi Kelurahan Pinaras secara transparan, cepat dan mudah diakses.
                         </p>
 
-                        <div className="mt-12 flex flex-wrap gap-8">
+                        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4">
                             <div className="flex flex-col items-center gap-3">
                                 <div className="flex size-14 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
                                     <svg viewBox="0 0 24 24" className="size-6" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
@@ -151,6 +167,8 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
                             </div>
 
                             {error && <p role="alert" className="mt-4 text-[13px] font-medium text-[var(--danger)]">{error}</p>}
+                            {remaining > 0 && <p role="status" className="mt-3 text-sm text-[var(--muted)]">Coba kembali dalam {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}</p>}
+                            {attemptsRemaining !== null && <p role="status" className="mt-3 text-sm text-[var(--muted)]">{blockedUntil && remaining === 0 ? "Jeda selesai. Anda dapat mencoba sekali lagi. Jika salah, jeda berikutnya diperpanjang." : `Sisa percobaan sebelum jeda: ${attemptsRemaining}.`}</p>}
                             <form className="space-y-3" onSubmit={handleStaffLogin}>
                                 <h3 className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]">
                                     <svg viewBox="0 0 24 24" className="size-5 text-[var(--leaf)]" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8Z"/></svg>
@@ -163,10 +181,11 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
                                             <svg viewBox="0 0 24 24" className="size-5 text-[var(--muted)]" fill="currentColor"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z"/></svg>
                                         </div>
                                         <input
+                                            aria-label="Username admin"
                                             value={username}
-                                            onChange={(event) => setUsername(event.target.value)}
+                                            onChange={(event) => { setUsername(event.target.value); setAttemptsRemaining(null); setBlockedUntil(null); setRemaining(0); setError(""); }}
                                             autoComplete="username"
-                                            placeholder="Username"
+                                            placeholder="Username admin"
                                             className="w-full rounded-xl border border-[var(--line)] bg-white py-3 pl-12 pr-4 text-sm font-semibold text-[var(--ink)] outline-none transition focus:border-[var(--leaf)] focus:ring-1 focus:ring-[var(--leaf)]"
                                             required
                                         />
@@ -177,6 +196,7 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
                                         </div>
                                         <input
                                             type="password"
+                                            aria-label="Password admin"
                                             value={password}
                                             onChange={(event) => setPassword(event.target.value)}
                                             autoComplete="current-password"
@@ -188,11 +208,12 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={pending}
+                                    disabled={pending || remaining > 0}
                                     className="w-full rounded-full bg-[var(--leaf-dark)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[var(--brand-deep)] disabled:opacity-60"
                                 >
-                                    {pending ? "Memeriksa..." : "Masuk →"}
+                                    {pending ? "Memeriksa..." : remaining > 0 ? "Menunggu jeda login" : "Masuk →"}
                                 </button>
+                                <p className="text-xs leading-5 text-[var(--muted)]">Lima kegagalan login akan memberi jeda 1 menit. Jika masih salah setelah jeda, waktu tunggu menjadi 3 menit, 9 menit, dan seterusnya.</p>
                             </form>
 
                             <div className="mt-5 flex items-start gap-3 rounded-2xl bg-[var(--surface)] p-3 text-[11px] text-[var(--muted)]">
@@ -205,9 +226,9 @@ export default function LoginForm({ callbackUrl, initialError }: { callbackUrl?:
             </div>
 
             {/* Absolute Footer */}
-            <div className="absolute bottom-6 left-6 right-6 flex hidden items-center justify-between text-[11px] text-white/70 lg:flex lg:bottom-8 lg:left-20 lg:right-20">
+            <div className="relative mx-auto mt-8 flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 text-xs text-white/85">
                 <p className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="size-4" fill="currentColor"><path d="M12 2L2 22h20L12 2Zm0 3.82L18.44 19H5.56L12 5.82ZM11 10h2v5h-2v-5Zm0 6h2v2h-2v-2Z"/></svg> Kelurahan Pinaras | Kecamatan Tomohon Selatan | Kota Tomohon</p>
-                <p>SIPP © {new Date().getFullYear()}. Semua Hak Dilindungi.</p>
+                <p className="ml-auto text-right">© Dibuat oleh KKT 149 UNSRAT Pinaras</p>
             </div>
         </main>
     );

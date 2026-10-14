@@ -1,5 +1,7 @@
 # SIPP V2 — Acceptance Criteria
 
+Pembaruan 14 Oktober 2026: CMS hanya mengelola struktur kelurahan (nama/foto). Pengumuman mendukung beberapa lampiran dan drag-and-drop; lampiran draft tetap tidak dapat diakses publik. Requirement baru dan penggantian cakupan checklist lama dirinci pada [USER_REQUEST_2026_10_14.md](USER_REQUEST_2026_10_14.md).
+
 ## Public
 - [ ] Landing page tanpa login.
 - [ ] Hanya content public/published yang terlihat.

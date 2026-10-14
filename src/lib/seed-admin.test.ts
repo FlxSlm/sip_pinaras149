@@ -22,10 +22,10 @@ describe("seed admin tanpa reset kredensial", () => {
         expect(await seedAdmin(db as unknown as SeedStore, "new-password")).toEqual({ id: "new-admin", created: true });
         const data = db.user.create.mock.calls[0][0].data;
         expect(data.role).toBe("ADMIN_KELURAHAN");
-        expect(data.username).toBe("admin.pinaras");
+        expect(data.username).toBe("kkt149unsrat@pinaras.com");
         expect(verifyPassword("new-password", data.passwordHash)).toBe(true);
     });
-    it.each([undefined, "short"])("gagal tanpa password awal valid", async (password) => {
+    it.each([undefined, "short", "            ", "x".repeat(257)])("gagal tanpa password awal valid", async (password) => {
         const db = store(null);
         await expect(seedAdmin(db as unknown as SeedStore, password)).rejects.toThrow("ADMIN_SEED_PASSWORD");
         expect(db.user.create).not.toHaveBeenCalled();
